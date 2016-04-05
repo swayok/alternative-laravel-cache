@@ -274,8 +274,7 @@ abstract class AlternativeCacheStore extends TaggableStore implements Store {
      */
     protected function decodeItem($item) {
         if ($item->isHit()) {
-            $value = $item->get();
-            return is_numeric($value) ? $value : unserialize($value);
+            return $item->get();
         }
         return null;
     }
@@ -285,7 +284,7 @@ abstract class AlternativeCacheStore extends TaggableStore implements Store {
      * @return int|string
      */
     protected function encodeValue($value) {
-        return is_numeric($value) ? $value : serialize($value);
+        return $value;
     }
 
     /**

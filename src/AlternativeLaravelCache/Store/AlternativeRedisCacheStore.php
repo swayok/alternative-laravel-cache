@@ -43,4 +43,17 @@ class AlternativeRedisCacheStore extends AlternativeCacheStore {
         $this->wrappedConnection = null;
     }
 
+    /**
+     * Fix original item key to be compatible with cache storeage wrapper.
+     * Used in some stores to fix not allowed chars usage in key name
+     *
+     * @param $key
+     * @return mixed
+     */
+    public function fixItemKey($key) {
+        // not allowed characters: {}()/\@:
+        return preg_replace('%[\{\}\(\)\/@:\\\]%', '-', parent::fixItemKey($key));
+    }
+
+
 }

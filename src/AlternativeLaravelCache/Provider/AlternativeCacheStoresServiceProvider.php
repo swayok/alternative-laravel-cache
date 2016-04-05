@@ -15,33 +15,39 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider {
     static protected $redisDriverName = 'redis';
     static protected $fileDriverName = 'file';
 
+    protected $defer = true;
+
     public function register() {
-        $this->app->booted(function () {
-            $cacheManager = $this->getCacheManager();
-            // Lets replace default redis cache storage (it is ugly for tagging)
-            $cacheManager->extend(static::$redisDriverName, function ($app, array $cacheConfig) {
-                return $this->makeRedisCacheRepository($app, $cacheConfig);
-            });
-            // and file cache storage too
-            $cacheManager->extend(static::$fileDriverName, function ($app, array $cacheConfig) {
-                return $this->makeFileCacheRepository($app, $cacheConfig);
-            });
+        $this->app->afterResolving('cache', function () {
+            $this->addDriversToCacheManager();
         });
     }
 
-    protected function makeRedisCacheRepository($app, array $cacheConfig) {
-        return $this->getCacheManager()->repository(new AlternativeRedisCacheStore(
-            $app['redis'],
-            $this->getPrefix($cacheConfig),
-            $this->getConnectionName($cacheConfig)
-        ));
+    protected function addDriversToCacheManager() {
+        $cacheManager = $this->app->make('cache');
+        $this->addRedisCacheDriver($cacheManager);
+        $this->addFileCacheDriver($cacheManager);
     }
 
-    protected function makeFileCacheRepository($app, array $cacheConfig) {
-        return $this->getCacheManager()->repository(new AlternativeFileCacheStore(
-            new Filesystem($this->makeFileCacheAdapter($cacheConfig)),
-            $this->getPrefix($cacheConfig)
-        ));
+    protected function addRedisCacheDriver(CacheManager $cacheManager) {
+        $cacheManager->extend(static::$redisDriverName, function ($app, array $cacheConfig) use ($cacheManager) {
+            $store = new AlternativeRedisCacheStore(
+                $app['redis'],
+                $this->getPrefix($cacheConfig),
+                $this->getConnectionName($cacheConfig)
+            );
+            return $cacheManager->repository($store);
+        });
+    }
+
+    protected function addFileCacheDriver(CacheManager $cacheManager) {
+        $cacheManager->extend(static::$fileDriverName, function ($app, array $cacheConfig) use ($cacheManager) {
+            $store = new AlternativeFileCacheStore(
+                new Filesystem($this->makeFileCacheAdapter($cacheConfig)),
+                $this->getPrefix($cacheConfig)
+            );
+            return $cacheManager->repository($store);
+        });
     }
 
     protected function makeFileCacheAdapter(array $cacheConfig) {
@@ -61,13 +67,6 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider {
      */
     protected function getPrefix(array $config) {
         return array_get($config, 'prefix') ?: config('cache.prefix');
-    }
-
-    /**
-     * @return CacheManager
-     */
-    protected function getCacheManager() {
-        return $this->app['cache'];
     }
 
     /**

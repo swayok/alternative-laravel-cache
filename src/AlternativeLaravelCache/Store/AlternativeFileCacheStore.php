@@ -27,9 +27,9 @@ class AlternativeFileCacheStore extends AlternativeCacheStore {
         return new FilesystemCachePool($this->getDb());
     }
 
-    public function itemKey($key) {
+    public function fixItemKey($key) {
         // allowed chars: a-zA-Z0-9_\.!
-        return parent::itemKey(preg_replace(
+        return parent::fixItemKey(preg_replace(
             ['%-+%',   '%\|+%',  '%/+%', '%[^a-zA-Z0-9_\.! ]+%'],
             ['_dash_', '_pipe_', '_ds_', '_'],
             $key

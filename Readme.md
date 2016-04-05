@@ -46,10 +46,22 @@ How it works with this lib:
 
 ##How to use it:
 
-Add `\AlternativeLaravelCache\Provider\AlternativeCacheStoresServiceProvider::class` to `$providers` in your `config/app.php`: 
+Add to `composer.json`:
+
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/swayok/alternativelaravelcache.git"
+        }
+    ],
+    "require": {
+        "swayok/alternativelaravelcache": "master@dev"
+    }
+
+Add to `config/app.php`: 
 
     $providers = [
-        \AlternativeLaravelCache\Provider\AlternativeCacheStoresServiceProvider::class
+        \AlternativeLaravelCache\Provider\AlternativeCacheStoresServiceProvider::class,
     ]
     
 ##Notes

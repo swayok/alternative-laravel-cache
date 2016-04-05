@@ -1,0 +1,33 @@
+{
+    "name": "swayok/AlternativeLaravelCache",
+    "type": "library",
+    "description": "Replacements for Laravel's redis and file cache stores that properly implement tagging idea. Powered by cache pool implementations provided by http://www.php-cache.com/",
+    "keywords": [
+        "php",
+        "laravel",
+        "cache",
+        "redis cache",
+        "tagged cache",
+        "redis tagged cache"
+    ],
+    "authors": [
+        {
+            "name": "Alexander Filippov"
+        }
+    ],
+    "license": "MIT",
+    "support": {
+        "issues": "https://github.com/swayok/AlternativeLaravelCache/issues"
+    },
+    "autoload": {
+        "psr-0": {
+            "AlternativeLaravelCache": "/src"
+        }
+    },
+    "require": {
+        "php": ">=5.3",
+        "laravel/framework": "5.2.*",
+        "cache/predis-adapter": "^0.4.0",
+        "cache/filesystem-adapter": "^0.3.0"
+    }
+}

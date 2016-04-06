@@ -1,7 +1,8 @@
 #What is this?
 This is full-featured replacement for Laravel's Redis and file cache storages. All storages support proper tagging. 
-Cache pools provided by http://www.php-cache.com/. All classes in this lib only proxies between Laravel's cache
-system and cache pools from http://www.php-cache.com/
+Cache pools provided by http://www.php-cache.com/ + I've added `HierarchialFilesystemCachePool` based on code of 
+`FilesystemCachePool` provided by http://www.php-cache.com/. All classes in this lib only proxies between Laravel's 
+cache system and cache pools from http://www.php-cache.com/ and my own pools.
 
 ##What is proper tagging?
 For example you have:

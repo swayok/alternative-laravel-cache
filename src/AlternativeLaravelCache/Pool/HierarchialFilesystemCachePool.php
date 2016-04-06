@@ -2,22 +2,22 @@
 
 namespace AlternativeLaravelCache\Pool;
 
-use Cache\Adapter\Filesystem\FilesystemCachePool;
+use Cache\Adapter\Common\AbstractCachePool;
 use Cache\Hierarchy\HierarchicalCachePoolTrait;
 use Cache\Hierarchy\HierarchicalPoolInterface;
 use Cache\Taggable\TaggableItemInterface;
+use Cache\Taggable\TaggablePoolTrait;
 use League\Flysystem\FileNotFoundException;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Util;
 use Psr\Cache\CacheItemInterface;
 
-/**
- * Lets say "thanks" to people who make important class methods be private so you need to duplicate lots of code
- * to extend a class instead of just overriding single method... =(( Burn in hell!
- */
-class HierarchialFilesystemCachePool extends FilesystemCachePool implements HierarchicalPoolInterface {
+class HierarchialFilesystemCachePool extends AbstractCachePool implements HierarchicalPoolInterface {
 
-    use HierarchicalCachePoolTrait;
+    const CACHE_PATH = 'cache';
+
+    use TaggablePoolTrait,
+        HierarchicalCachePoolTrait;
 
     /**
      * @type Filesystem
@@ -29,7 +29,7 @@ class HierarchialFilesystemCachePool extends FilesystemCachePool implements Hier
      */
     public function __construct(Filesystem $filesystem) {
         $this->filesystem = $filesystem;
-        parent::__construct($filesystem);
+        $this->filesystem->createDir(self::CACHE_PATH);
     }
 
     /**
@@ -45,7 +45,7 @@ class HierarchialFilesystemCachePool extends FilesystemCachePool implements Hier
      * @throws \InvalidArgumentException
      */
     protected function getValueFormStore($key) {
-        list($isHit, $value, $tags) = $this->fetchObjectFromCache($key);
+        list($isHit, $value) = $this->fetchObjectFromCache($key);
         return $isHit ? $value : null;
     }
 
@@ -63,6 +63,17 @@ class HierarchialFilesystemCachePool extends FilesystemCachePool implements Hier
         $key = str_replace(HierarchicalPoolInterface::HIERARCHY_SEPARATOR, '/', $key);
 
         return sprintf('%s/%s', self::CACHE_PATH, $key);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function save(CacheItemInterface $item) {
+        if ($item instanceof TaggableItemInterface) {
+            $this->saveTags($item);
+        }
+
+        return parent::save($item);
     }
 
     /**
@@ -205,6 +216,17 @@ class HierarchialFilesystemCachePool extends FilesystemCachePool implements Hier
         $this->preRemoveItem($key);
 
         return $this->forceClear($key);
+    }
+
+    /**
+     * {@inheritdoc}
+     * @throws \League\Flysystem\RootViolationException
+     */
+    protected function clearAllObjectsFromCache() {
+        $this->filesystem->deleteDir(self::CACHE_PATH);
+        $this->filesystem->createDir(self::CACHE_PATH);
+
+        return true;
     }
 
     /**

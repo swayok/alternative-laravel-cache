@@ -105,7 +105,7 @@ abstract class AlternativeCacheStore extends TaggableStore implements Store {
     public function getHierarchySeparator() {
         if (static::$hierarchySeparator === null) {
             static::$hierarchySeparator = '_';
-            if (in_array(HierarchicalPoolInterface::class, class_implements($this->getWrappedConnection()), true)) {
+            if ($this->getWrappedConnection() instanceof HierarchicalPoolInterface) {
                 static::$hierarchySeparator = HierarchicalPoolInterface::HIERARCHY_SEPARATOR;
             }
         }

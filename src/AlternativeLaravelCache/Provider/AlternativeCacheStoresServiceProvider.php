@@ -3,6 +3,7 @@
 namespace AlternativeLaravelCache\Provider;
 
 use AlternativeLaravelCache\Store\AlternativeFileCacheStore;
+use AlternativeLaravelCache\Store\AlternativeHierarchialFileCacheStore;
 use AlternativeLaravelCache\Store\AlternativeRedisCacheStore;
 use Doctrine\Instantiator\Exception\InvalidArgumentException;
 use Illuminate\Cache\CacheManager;
@@ -42,7 +43,7 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider {
 
     protected function addFileCacheDriver(CacheManager $cacheManager) {
         $cacheManager->extend(static::$fileDriverName, function ($app, array $cacheConfig) use ($cacheManager) {
-            $store = new AlternativeFileCacheStore(
+            $store = new AlternativeHierarchialFileCacheStore(
                 new Filesystem($this->makeFileCacheAdapter($cacheConfig)),
                 $this->getPrefix($cacheConfig)
             );

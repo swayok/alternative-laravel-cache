@@ -2,7 +2,6 @@
 
 namespace AlternativeLaravelCache\Provider;
 
-use AlternativeLaravelCache\Store\AlternativeFileCacheStore;
 use AlternativeLaravelCache\Store\AlternativeHierarchialFileCacheStore;
 use AlternativeLaravelCache\Store\AlternativeRedisCacheStore;
 use Doctrine\Instantiator\Exception\InvalidArgumentException;
@@ -15,8 +14,6 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider {
 
     static protected $redisDriverName = 'redis';
     static protected $fileDriverName = 'file';
-
-    protected $defer = true;
 
     public function register() {
         $this->app->afterResolving('cache', function () {

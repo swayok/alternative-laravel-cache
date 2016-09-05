@@ -28,11 +28,12 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider {
     }
 
     protected function addRedisCacheDriver(CacheManager $cacheManager) {
-        $cacheManager->extend(static::$redisDriverName, function ($app, array $cacheConfig) use ($cacheManager) {
+        $provider = $this;
+        $cacheManager->extend(static::$redisDriverName, function ($app, array $cacheConfig) use ($provider, $cacheManager) {
             $store = new AlternativeRedisCacheStore(
                 $app['redis'],
-                static::getPrefix($cacheConfig),
-                static::getConnectionName($cacheConfig)
+                $provider::getPrefix($cacheConfig),
+                $provider::getConnectionName($cacheConfig)
             );
             return $cacheManager->repository($store);
         });
@@ -48,7 +49,7 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider {
         });
     }
 
-    static protected function makeFileCacheAdapter(array $cacheConfig) {
+    static public function makeFileCacheAdapter(array $cacheConfig) {
         switch (strtolower($cacheConfig['driver'])) {
             case 'file':
                 return new Local($cacheConfig['path']);
@@ -63,7 +64,7 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider {
      * @param array $config
      * @return string
      */
-    static protected function getPrefix(array $config) {
+    static public function getPrefix(array $config) {
         return array_get($config, 'prefix') ?: config('cache.prefix');
     }
 
@@ -71,7 +72,7 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider {
      * @param array $cacheConfig
      * @return string
      */
-    static protected function getConnectionName(array $cacheConfig) {
+    static public function getConnectionName(array $cacheConfig) {
         return array_get($cacheConfig, 'connection', 'default') ?: 'default';
     }
 }

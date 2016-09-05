@@ -31,8 +31,8 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider {
         $cacheManager->extend(static::$redisDriverName, function ($app, array $cacheConfig) use ($cacheManager) {
             $store = new AlternativeRedisCacheStore(
                 $app['redis'],
-                $this->getPrefix($cacheConfig),
-                $this->getConnectionName($cacheConfig)
+                static::getPrefix($cacheConfig),
+                static::getConnectionName($cacheConfig)
             );
             return $cacheManager->repository($store);
         });
@@ -41,14 +41,14 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider {
     protected function addFileCacheDriver(CacheManager $cacheManager) {
         $cacheManager->extend(static::$fileDriverName, function ($app, array $cacheConfig) use ($cacheManager) {
             $store = new AlternativeHierarchialFileCacheStore(
-                new Filesystem($this->makeFileCacheAdapter($cacheConfig)),
-                $this->getPrefix($cacheConfig)
+                new Filesystem(static::makeFileCacheAdapter($cacheConfig)),
+                static::getPrefix($cacheConfig)
             );
             return $cacheManager->repository($store);
         });
     }
 
-    protected function makeFileCacheAdapter(array $cacheConfig) {
+    static protected function makeFileCacheAdapter(array $cacheConfig) {
         switch (strtolower($cacheConfig['driver'])) {
             case 'file':
                 return new Local($cacheConfig['path']);
@@ -63,7 +63,7 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider {
      * @param array $config
      * @return string
      */
-    protected function getPrefix(array $config) {
+    static protected function getPrefix(array $config) {
         return array_get($config, 'prefix') ?: config('cache.prefix');
     }
 
@@ -71,7 +71,7 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider {
      * @param array $cacheConfig
      * @return string
      */
-    protected function getConnectionName(array $cacheConfig) {
+    static protected function getConnectionName(array $cacheConfig) {
         return array_get($cacheConfig, 'connection', 'default') ?: 'default';
     }
 }

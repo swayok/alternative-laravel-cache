@@ -1,10 +1,10 @@
-#What is this?
+# What is this?
 This is full-featured replacement for Laravel's Redis and file cache storages. All storages support proper tagging. 
 Cache pools provided by http://www.php-cache.com/ + I've added `HierarchialFilesystemCachePool` based on code of 
 `FilesystemCachePool` provided by http://www.php-cache.com/. All classes in this lib only proxies between Laravel's 
 cache system and cache pools from http://www.php-cache.com/ and my own pools.
 
-##What is proper tagging?
+## What is proper tagging?
 For example you have:
     
     Cache::tags(['tag1', 'tag2'])->put('tag-test1', 'ok', 20);
@@ -45,19 +45,33 @@ How it works with this lib:
     Cache::tags(['tag1', 'tag2'])->flush();             //< deleted all cache entries with tag 'tag1' or 'tag2'
     Cache::tags(['tag2', 'tag1'])->flush();             //< deleted all cache entries with tag 'tag2' or 'tag1'
 
-##How to use it:
+## How to use it:
+
+### For Laravel 5.4+
 
 Add to `composer.json`:
 
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/swayok/alternativelaravelcache.git"
-        }
-    ],
     "require": {
         "swayok/alternativelaravelcache": "master@dev"
     }
+    
+### For Laravel 5.3
+
+Add to `composer.json`:
+
+    "require": {
+        "swayok/alternativelaravelcache": "master@5.3.*"
+    }
+    
+### Redis support
+
+Add to `composer.json`:
+
+    "require": {
+        "predis/predis": "*"
+    }
+
+### Declare ServiceProvider
 
 Add to `config/app.php`: 
 
@@ -65,7 +79,7 @@ Add to `config/app.php`:
         \AlternativeLaravelCache\Provider\AlternativeCacheStoresServiceProvider::class,
     ]
     
-##Notes
+## Notes
 By default service provider will replace Laravel's `redis` and `file` cache stores. 
 You can alter this behavior like this:
 

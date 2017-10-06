@@ -4,13 +4,17 @@ namespace AlternativeLaravelCache\Store;
 
 use AlternativeLaravelCache\Core\AlternativeCacheStore;
 use Cache\Adapter\Predis\PredisCachePool;
+use Illuminate\Redis\RedisManager;
 
+/**
+ * @method RedisManager getDb()
+ */
 class AlternativeRedisCacheStore extends AlternativeCacheStore {
 
     /**
      * The Redis database connection.
      *
-     * @var \Illuminate\Redis\Database
+     * @var RedisManager
      */
     protected $db;
 
@@ -29,7 +33,7 @@ class AlternativeRedisCacheStore extends AlternativeCacheStore {
      * @return \Predis\Client|\Predis\ClientInterface
      */
     public function getConnection() {
-        return $this->getDb()->connection($this->connection);
+        return $this->getDb()->connection($this->connection)->client();
     }
 
     /**

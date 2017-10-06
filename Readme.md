@@ -60,7 +60,7 @@ Add to `composer.json`:
 Add to `composer.json`:
 
     "require": {
-        "swayok/alternativelaravelcache": "master@5.3.*"
+        "swayok/alternativelaravelcache": "5.3.*"
     }
     
 ### Redis support

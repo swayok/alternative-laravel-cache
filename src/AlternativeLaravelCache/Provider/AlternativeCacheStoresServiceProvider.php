@@ -40,11 +40,10 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider {
     }
 
     protected function addFileCacheDriver(CacheManager $cacheManager) {
-        $cacheManager->extend(static::$fileDriverName, function ($app, array $cacheConfig) use ($cacheManager) {
-            $store = new AlternativeHierarchialFileCacheStore(
-                new Filesystem(static::makeFileCacheAdapter($cacheConfig)),
-                static::getPrefix($cacheConfig)
-            );
+        $provider = $this;
+        $cacheManager->extend(static::$fileDriverName, function ($app, array $cacheConfig) use ($provider, $cacheManager) {
+            $db = new Filesystem($provider::makeFileCacheAdapter($cacheConfig));
+            $store = new AlternativeHierarchialFileCacheStore($db, $provider::getPrefix($cacheConfig));
             return $cacheManager->repository($store);
         });
     }

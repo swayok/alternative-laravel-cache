@@ -35,6 +35,7 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider {
                 $provider::getPrefix($cacheConfig),
                 $provider::getConnectionName($cacheConfig)
             );
+            $store->getWrappedConnection()->setLogger(app('log'));
             return $cacheManager->repository($store);
         });
     }
@@ -44,6 +45,7 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider {
         $cacheManager->extend(static::$fileDriverName, function ($app, array $cacheConfig) use ($provider, $cacheManager) {
             $db = new Filesystem($provider::makeFileCacheAdapter($cacheConfig));
             $store = new AlternativeHierarchialFileCacheStore($db, $provider::getPrefix($cacheConfig));
+            $store->getWrappedConnection()->setLogger(app('log'));
             return $cacheManager->repository($store);
         });
     }

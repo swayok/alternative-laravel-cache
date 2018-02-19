@@ -356,7 +356,7 @@ abstract class AlternativeCacheStore extends TaggableStore implements Store {
      * Begin executing a new tags operation.
      *
      * @param  array|mixed $names
-     * @return \Illuminate\Cache\RedisTaggedCache
+     * @return AlternativeTaggedCache
      * @throws \InvalidArgumentException
      */
     public function tags($names) {

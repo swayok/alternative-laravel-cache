@@ -9,14 +9,13 @@ use Illuminate\Cache\CacheManager;
 use Illuminate\Support\ServiceProvider;
 use League\Flysystem\Adapter\Local;
 use League\Flysystem\Filesystem;
-dd('hi');
+
 class AlternativeCacheStoresServiceProvider extends ServiceProvider {
 
     static protected $redisDriverName = 'redis';
     static protected $fileDriverName = 'file';
 
     public function register() {
-      dd('hi');
         $this->app->afterResolving('cache', function () {
             $this->addDriversToCacheManager();
         });

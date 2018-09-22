@@ -30,8 +30,8 @@ class AlternativeHierarchialFileCacheStore extends AlternativeCacheStore {
     public function fixItemKey($key) {
         // allowed chars: "a-zA-Z0-9_\.! |"
         return parent::fixItemKey(preg_replace(
-            ['%-+%',   '%/+%', '%[^a-zA-Z0-9_\.! |]+%'],
-            ['_dash_', '_ds_', '_'],
+            ['%-+%',   '%\|+%',  '%/+%', '%[^a-zA-Z0-9_\.! ]+%'],
+            ['_dash_', '_pipe_', '_ds_', '_'],
             $key
         ));
     }

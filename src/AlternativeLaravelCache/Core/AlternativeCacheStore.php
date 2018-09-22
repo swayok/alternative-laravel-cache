@@ -242,9 +242,9 @@ abstract class AlternativeCacheStore extends TaggableStore implements Store {
     public function flush() {
         $tags = $this->_pullTags();
         if (empty($tags)) {
-            $this->getWrappedConnection()->clear();
+            return (bool)$this->getWrappedConnection()->clear();
         } else {
-            $this->getWrappedConnection()->clearTags($tags);
+            return (bool)$this->getWrappedConnection()->clearTags($tags);
         }
     }
 

@@ -47,6 +47,10 @@ How it works with this lib:
 
 ## How to use it:
 
+### For Laravel 5.6+
+
+Nothing is needed, package auto-discovery will work.
+
 ### For Laravel 5.4+
 
 Add to `composer.json`:

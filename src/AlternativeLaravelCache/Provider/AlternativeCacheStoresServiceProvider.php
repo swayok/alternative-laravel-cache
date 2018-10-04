@@ -2,6 +2,7 @@
 
 namespace AlternativeLaravelCache\Provider;
 
+use AlternativeLaravelCache\Store\AlternativeFileCacheStore;
 use AlternativeLaravelCache\Store\AlternativeHierarchialFileCacheStore;
 use AlternativeLaravelCache\Store\AlternativeRedisCacheStore;
 use Doctrine\Instantiator\Exception\InvalidArgumentException;
@@ -14,6 +15,7 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider {
 
     static protected $redisDriverName = 'redis';
     static protected $fileDriverName = 'file';
+    static protected $hierarchialFileDriverName = 'hierarchial_file';
 
     public function register() {
         $this->app->afterResolving('cache', function () {
@@ -25,6 +27,7 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider {
         $cacheManager = $this->app->make('cache');
         $this->addRedisCacheDriver($cacheManager);
         $this->addFileCacheDriver($cacheManager);
+        $this->addHierarchialFileCacheDriver($cacheManager);
     }
 
     protected function addRedisCacheDriver(CacheManager $cacheManager) {
@@ -44,6 +47,16 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider {
         $provider = $this;
         $cacheManager->extend(static::$fileDriverName, function ($app, array $cacheConfig) use ($provider, $cacheManager) {
             $db = new Filesystem($provider::makeFileCacheAdapter($cacheConfig));
+            $store = new AlternativeFileCacheStore($db, $provider::getPrefix($cacheConfig));
+            $store->getWrappedConnection()->setLogger(app('log'));
+            return $cacheManager->repository($store);
+        });
+    }
+
+    protected function addHierarchialFileCacheDriver(CacheManager $cacheManager) {
+        $provider = $this;
+        $cacheManager->extend(static::$hierarchialFileDriverName, function ($app, array $cacheConfig) use ($provider, $cacheManager) {
+            $db = new Filesystem($provider::makeFileCacheAdapter($cacheConfig));
             $store = new AlternativeHierarchialFileCacheStore($db, $provider::getPrefix($cacheConfig));
             $store->getWrappedConnection()->setLogger(app('log'));
             return $cacheManager->repository($store);
@@ -52,7 +65,8 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider {
 
     static public function makeFileCacheAdapter(array $cacheConfig) {
         switch (strtolower($cacheConfig['driver'])) {
-            case 'file':
+            case static::$fileDriverName:
+            case static::$hierarchialFileDriverName:
                 return new Local($cacheConfig['path']);
             default:
                 throw new InvalidArgumentException("File cache driver [{$cacheConfig['driver']}] is not supported.

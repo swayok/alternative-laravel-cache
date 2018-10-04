@@ -83,6 +83,14 @@ Add to `config/app.php`:
         \AlternativeLaravelCache\Provider\AlternativeCacheStoresServiceProvider::class,
     ]
     
+### Supported cache drivers
+
+- `redis` - redis cache with proper tagging
+- `file` - file-based cache with proper tagging
+- `hierarchial_file` - hierarchial file-based cache with proper tagging (http://www.php-cache.com/en/latest/hierarchy/).
+This driver also supports `/` instead of `|` so you can use `/users/:uid/followers/:fid/likes` instead of `|users|:uid|followers|:fid|likes`
+as it better represents path in file system.
+    
 ## Notes
 By default service provider will replace Laravel's `redis` and `file` cache stores. 
 You can alter this behavior like this:

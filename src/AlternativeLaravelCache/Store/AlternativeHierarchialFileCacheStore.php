@@ -28,10 +28,13 @@ class AlternativeHierarchialFileCacheStore extends AlternativeCacheStore {
     }
 
     public function fixItemKey($key) {
-        // allowed chars: "a-zA-Z0-9_\.! |"
+        // allowed chars: "a-zA-Z0-9_.! |"
+        // note: do not replace pipe "|" or hierarachial cache won't work
+        // note: directory separator "/" will be converted to pipe "|" in order to provide
+        // more native way of folding like "/folder/subfolder/item/id"
         return parent::fixItemKey(preg_replace(
-            ['%-+%',   '%\|+%',  '%/+%', '%[^a-zA-Z0-9_\.! ]+%'],
-            ['_dash_', '_pipe_', '_ds_', '_'],
+            ['%-+%',   '%[/|]+%', '%[^a-zA-Z0-9_\.! |]+%'],
+            ['_dash_', '|', '_'],
             $key
         ));
     }

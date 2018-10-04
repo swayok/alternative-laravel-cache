@@ -56,7 +56,7 @@ Nothing is needed, package auto-discovery will work.
 Add to `composer.json`:
 
     "require": {
-        "swayok/alternativelaravelcache": "master@dev"
+        "swayok/alternative-laravel-cache": "5.4.*"
     }
     
 ### For Laravel 5.3
@@ -64,7 +64,7 @@ Add to `composer.json`:
 Add to `composer.json`:
 
     "require": {
-        "swayok/alternativelaravelcache": "5.3.*"
+        "swayok/alternative-laravel-cache": "5.3.*"
     }
     
 ### Redis support

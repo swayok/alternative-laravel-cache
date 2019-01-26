@@ -22,7 +22,7 @@ abstract class AlternativeCacheStore extends TaggableStore implements Store {
     /**
      * @var string
      */
-    static public $hierarchySeparator;
+    public $hierarchySeparator;
 
     /**
      * A string that should be prepended to keys.
@@ -101,15 +101,16 @@ abstract class AlternativeCacheStore extends TaggableStore implements Store {
         }
         return $this->wrappedConnection;
     }
-
+    
     public function getHierarchySeparator() {
-        if (static::$hierarchySeparator === null) {
-            static::$hierarchySeparator = '_';
-            if ($this->getWrappedConnection() instanceof HierarchicalPoolInterface) {
-                static::$hierarchySeparator = HierarchicalPoolInterface::HIERARCHY_SEPARATOR;
-            }
+        if ($this->hierarchySeparator) {
+            return $this->hierarchySeparator;
         }
-        return static::$hierarchySeparator;
+        $this->hierarchySeparator = '_';
+        if ($this->getWrappedConnection() instanceof HierarchicalPoolInterface) {
+            $this->hierarchySeparator = HierarchicalPoolInterface::HIERARCHY_SEPARATOR;
+        }
+        return $this->hierarchySeparator;
     }
 
     /**

@@ -24,6 +24,11 @@
             "AlternativeLaravelCache": "/src"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
     "require": {
         "php": ">=5.6",
         "laravel/framework": ">=5.2",

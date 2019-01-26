@@ -15,13 +15,22 @@ class AlternativeTaggedCache extends TaggedCache {
     protected $tags;
 
     /**
+     * A string that should be prepended to keys.
+     *
+     * @var string
+     */
+    protected $prefix;
+
+    /**
      * Create a new tagged cache instance.
      *
      * @param  \Illuminate\Contracts\Cache\Store $store
+     * @param  string $prefix
      * @param  AlternativeTagSet $tags
      */
-    public function __construct(Store $store, AlternativeTagSet $tags) {
+    public function __construct(Store $store, $prefix, AlternativeTagSet $tags) {
         parent::__construct($store, $tags);
+        $this->setPrefix($prefix);
     }
 
     /**
@@ -95,4 +104,24 @@ class AlternativeTaggedCache extends TaggedCache {
     public function taggedItemKey($key) {
         throw new \BadMethodCallException('Method taggedItemKey() is not used in AlternativeTaggedCache');
     }
+
+    /**
+     * Set the cache key prefix.
+     *
+     * @param  string $prefix
+     * @return void
+     */
+    public function setPrefix($prefix) {
+        $this->prefix = $prefix;
+    }
+
+    /**
+     * Get the cache key prefix.
+     *
+     * @return string
+     */
+    public function getPrefix() {
+        return $this->prefix;
+    }
+
 }

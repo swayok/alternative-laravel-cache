@@ -26,6 +26,11 @@ class AlternativeFileCacheStore extends AlternativeCacheStore {
         return new FilesystemCachePool($this->getDb());
     }
 
+    public function setPrefix($prefix) {
+        // allowed chars: "a-zA-Z0-9_.! "
+        parent::setPrefix(preg_replace('%[^a-zA-Z0-9_\.! ]+%', '_', $prefix));
+    }
+
     public function fixItemKey($key) {
         // allowed chars: "a-zA-Z0-9_.! "
         return parent::fixItemKey(preg_replace(

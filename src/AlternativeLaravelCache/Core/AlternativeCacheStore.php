@@ -238,7 +238,7 @@ abstract class AlternativeCacheStore extends TaggableStore implements Store {
     /**
      * Remove all items from the cache.
      *
-     * @return void
+     * @return bool
      */
     public function flush() {
         $tags = $this->_pullTags();
@@ -357,7 +357,7 @@ abstract class AlternativeCacheStore extends TaggableStore implements Store {
      * Begin executing a new tags operation.
      *
      * @param  array|mixed $names
-     * @return \Illuminate\Cache\RedisTaggedCache
+     * @return AlternativeTaggedCache
      * @throws \InvalidArgumentException
      */
     public function tags($names) {
@@ -366,11 +366,11 @@ abstract class AlternativeCacheStore extends TaggableStore implements Store {
                 $names = [$names];
             }
             if (!is_array($names)) {
-                throw new \InvalidArgumentException('$tags should be null, array or string');
+                throw new \InvalidArgumentException('$names argument should be null, array or string');
             }
         }
         $tags = new AlternativeTagSet($this, is_array($names) ? $names : func_get_args());
-        return new AlternativeTaggedCache($this, $tags);
+        return new AlternativeTaggedCache($this, $this->getPrefix(), $tags);
     }
 
 }

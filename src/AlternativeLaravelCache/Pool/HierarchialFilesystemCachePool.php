@@ -3,6 +3,7 @@
 namespace AlternativeLaravelCache\Pool;
 
 use Cache\Adapter\Common\AbstractCachePool;
+use Cache\Adapter\Common\Exception\CachePoolException;
 use Cache\Hierarchy\HierarchicalCachePoolTrait;
 use Cache\Hierarchy\HierarchicalPoolInterface;
 use Cache\Taggable\TaggableItemInterface;
@@ -62,7 +63,7 @@ class HierarchialFilesystemCachePool extends AbstractCachePool implements Hierar
         }
         $key = str_replace(HierarchicalPoolInterface::HIERARCHY_SEPARATOR, '/', $key);
 
-        return sprintf('%s/%s', self::CACHE_PATH, $key);
+        return sprintf('%s/%s', rtrim(self::CACHE_PATH, '/\\'), ltrim($key, '/\\'));
     }
 
     /**
@@ -114,6 +115,7 @@ class HierarchialFilesystemCachePool extends AbstractCachePool implements Hierar
             return [false, null, []];
         }
 
+        /** @noinspection UnserializeExploitsInspection */
         $data = unserialize($this->filesystem->read($file));
         if ($data[0] !== null && time() > $data[0]) {
             foreach ($data[2] as $tag) {
@@ -240,7 +242,13 @@ class HierarchialFilesystemCachePool extends AbstractCachePool implements Hierar
      * @throws \InvalidArgumentException
      */
     protected function preRemoveItem($key) {
-        $tags = $this->getItem($key)->getTags();
+        try {
+            $tags = $this->getItem($key)->getTags();
+        } catch (CachePoolException $exc) {
+            if (!$exc->getPrevious() || strpos('file_get_contents(', $exc->getPrevious()->getMessage()) !== false) {
+                throw new $exc;
+            }
+        }
         if (!empty($tags)) {
             foreach ($tags as $tag) {
                 $this->removeListItem($this->getTagKey($tag), $key);

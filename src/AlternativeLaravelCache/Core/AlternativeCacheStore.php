@@ -59,8 +59,8 @@ abstract class AlternativeCacheStore extends TaggableStore implements Store {
      */
     public function __construct($db, $prefix, $connection = null) {
         $this->db = $db;
-        $this->setPrefix($prefix);
         $this->connection = $connection;
+        $this->setPrefix($prefix);
     }
 
     /**
@@ -101,7 +101,7 @@ abstract class AlternativeCacheStore extends TaggableStore implements Store {
         }
         return $this->wrappedConnection;
     }
-    
+
     public function getHierarchySeparator() {
         if ($this->hierarchySeparator) {
             return $this->hierarchySeparator;

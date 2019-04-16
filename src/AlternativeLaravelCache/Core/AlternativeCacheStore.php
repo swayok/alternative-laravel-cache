@@ -53,6 +53,12 @@ abstract class AlternativeCacheStore extends TaggableStore implements Store {
     protected $tags;
 
     /**
+     * Autodetected in isDurationInSeconds() depending on Laravel/Lumen version
+     * @var bool
+     */
+    private $isDurationInSeconds;
+
+    /**
      * @param mixed $db - something like \Illuminate\Redis\Database
      * @param string $prefix
      * @param string|null $connection - connection name to use (if applicable)
@@ -141,26 +147,26 @@ abstract class AlternativeCacheStore extends TaggableStore implements Store {
     }
 
     /**
-     * Store an item in the cache for a given number of minutes.
+     * Store an item in the cache for a given number of minutes/seconds.
      *
      * @param  string $key
      * @param  mixed $value
-     * @param  int $minutes
+     * @param  int $duration - seconds for Laravel >= 5.8 or minutes for Laravel <= 5.7
      * @return void
      * @throws \Psr\Cache\InvalidArgumentException
      */
-    public function put($key, $value, $minutes) {
-        $this->getWrappedConnection()->save($this->newItem($key, $value, $this->_pullTags(), $minutes));
+    public function put($key, $value, $duration) {
+        $this->getWrappedConnection()->save($this->newItem($key, $value, $this->_pullTags(), $duration));
     }
 
     /**
      * Store multiple items in the cache for a given number of minutes.
      *
      * @param  array $values
-     * @param  int $minutes
+     * @param  int $duration - seconds for Laravel >= 5.8 or minutes for Laravel <= 5.7
      * @return void
      */
-    public function putMany(array $values, $minutes) {
+    public function putMany(array $values, $duration) {
         if (!count($values)) {
             return;
         }
@@ -289,19 +295,43 @@ abstract class AlternativeCacheStore extends TaggableStore implements Store {
     }
 
     /**
+     * @return bool
+     */
+    protected function isDurationInSeconds() {
+        if ($this->isDurationInSeconds === null) {
+            $this->isDurationInSeconds = preg_match('%^.*?(\d+\.\d+)%', \App::version(), $matches) && (float)$matches[1] >= 5.8;
+        }
+        return $this->isDurationInSeconds;
+    }
+
+    /**
+     * @return int
+     */
+    protected function getDefaultDuration() {
+        return 525600 * ($this->isDurationInSeconds() ? 60 : 1);
+    }
+
+    /**
+     * @return int
+     */
+    protected function getDurationMultiplier() {
+        return $this->isDurationInSeconds() ? 1 : 60;
+    }
+
+    /**
      * @param string $key
      * @param mixed $value
      * @param $tags
-     * @param int $minutes
+     * @param int $duration
      * @return CacheItem|TaggableItemInterface
      * @throws \Psr\Cache\InvalidArgumentException
      */
-    protected function newItem($key, $value, $tags = null, $minutes = null) {
-        $minutes = $minutes === null ? 525600 : max(1, (int)$minutes);
+    protected function newItem($key, $value, $tags = null, $duration = null) {
+        $duration = $duration === null ? $this->getDefaultDuration() : max(1, (int)$duration);
         $item = $this->getWrappedConnection()->getItem($this->itemKey($key));
         $item
             ->set($this->encodeValue($value))
-            ->expiresAfter($minutes * 60);
+            ->expiresAfter($duration * $this->getDurationMultiplier());
         if (!empty($tags)) {
             $item->setTags($tags);
         }

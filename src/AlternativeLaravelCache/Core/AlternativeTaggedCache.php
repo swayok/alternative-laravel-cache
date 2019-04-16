@@ -38,24 +38,24 @@ class AlternativeTaggedCache extends TaggedCache {
      *
      * @param  string $key
      * @param  mixed $value
-     * @param  \DateTime|int $minutes
+     * @param  \DateTime|int $ttl - seconds for Laravel >= 5.8 or minutes for Laravel <= 5.7
      * @return void
      */
-    public function put($key, $value, $minutes = null) {
+    public function put($key, $value, $ttl = null) {
         $this->sendTagsToStore();
-        parent::put($key, $value, $minutes);
+        parent::put($key, $value, $ttl);
     }
 
     /**
      * Store multiple items in the cache for a given number of minutes.
      *
      * @param  array $values
-     * @param  int $minutes
+     * @param  int $ttl  - seconds for Laravel >= 5.8 or minutes for Laravel <= 5.7
      * @return void
      */
-    public function putMany(array $values, $minutes) {
+    public function putMany(array $values, $ttl = null) {
         $this->sendTagsToStore();
-        parent::putMany($values, $minutes);
+        parent::putMany($values, $ttl);
     }
 
     /**

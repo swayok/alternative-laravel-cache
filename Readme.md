@@ -90,6 +90,27 @@ Add to `config/app.php`:
 - `hierarchial_file` - hierarchial file-based cache with proper tagging (http://www.php-cache.com/en/latest/hierarchy/).
 This driver also supports `/` instead of `|` so you can use `/users/:uid/followers/:fid/likes` instead of `|users|:uid|followers|:fid|likes`
 as it better represents path in file system.
+
+### `permissions` configuration parameter for file-based cache drivers (`config/cache.php`)
+
+    'stores' => [
+        'file' => [
+            'driver' => 'file',
+            'path' => storage_path('framework/cache/data'),
+            'permissions' => [
+                'file' => [
+                    'public' => 0644,
+                ],
+                'dir' => [
+                    'public' => 0755,
+                ],
+            ]
+        ],
+    ],
+    
+This permissions passed to `vendor/league/flysystem/src/Adapter/Local.php` 
+and merged with default permissions. There are 2 types: `public` and `private`
+but only `public` permissions are used in `AlternativeLaravelCache`.
     
 ## Notes
 By default service provider will replace Laravel's `redis` and `file` cache stores. 
@@ -103,4 +124,4 @@ You can alter this behavior like this:
 File cache storage currently supports only `'driver' => 'file'`. You can extend list of file cache drivers by  
 overwriting `AlternativeCacheStoresServiceProvider->makeFileCacheAdapter()`
 
-Yep, there is no tests right now and possibly they will never appear. 
+Yep, there are not much tests right now and possibly there will never be more. 

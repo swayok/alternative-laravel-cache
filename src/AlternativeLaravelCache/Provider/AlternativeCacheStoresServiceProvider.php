@@ -67,7 +67,7 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider {
         switch (strtolower($cacheConfig['driver'])) {
             case static::$fileDriverName:
             case static::$hierarchialFileDriverName:
-                return new Local($cacheConfig['path']);
+                return new Local($cacheConfig['path'], LOCK_EX, Local::DISALLOW_LINKS, array_get($cacheConfig, 'permissions') ?: []);
             default:
                 throw new InvalidArgumentException("File cache driver [{$cacheConfig['driver']}] is not supported.
                     You can add support for drivers by overwriting " . __CLASS__ . '->makeFileCacheAdapter() method');

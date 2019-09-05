@@ -7,6 +7,7 @@ use AlternativeLaravelCache\Store\AlternativeHierarchialFileCacheStore;
 use AlternativeLaravelCache\Store\AlternativeRedisCacheStore;
 use Doctrine\Instantiator\Exception\InvalidArgumentException;
 use Illuminate\Cache\CacheManager;
+use Illuminate\Support\Arr;
 use Illuminate\Support\ServiceProvider;
 use League\Flysystem\Adapter\Local;
 use League\Flysystem\Filesystem;
@@ -67,7 +68,7 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider {
         switch (strtolower($cacheConfig['driver'])) {
             case static::$fileDriverName:
             case static::$hierarchialFileDriverName:
-                return new Local($cacheConfig['path'], LOCK_EX, Local::DISALLOW_LINKS, array_get($cacheConfig, 'permissions') ?: []);
+                return new Local($cacheConfig['path'], LOCK_EX, Local::DISALLOW_LINKS, Arr::get($cacheConfig, 'permissions') ?: []);
             default:
                 throw new InvalidArgumentException("File cache driver [{$cacheConfig['driver']}] is not supported.
                     You can add support for drivers by overwriting " . __CLASS__ . '->makeFileCacheAdapter() method');
@@ -80,7 +81,7 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider {
      * @return string
      */
     static public function getPrefix(array $config) {
-        return array_get($config, 'prefix') ?: config('cache.prefix');
+        return Arr::get($config, 'prefix') ?: config('cache.prefix');
     }
 
     /**
@@ -88,6 +89,6 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider {
      * @return string
      */
     static public function getConnectionName(array $cacheConfig) {
-        return array_get($cacheConfig, 'connection', 'default') ?: 'default';
+        return Arr::get($cacheConfig, 'connection', 'default') ?: 'default';
     }
 }

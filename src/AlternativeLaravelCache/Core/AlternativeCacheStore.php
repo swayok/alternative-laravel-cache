@@ -255,6 +255,15 @@ abstract class AlternativeCacheStore extends TaggableStore implements Store {
     }
 
     /**
+     * Remove all items from the cache.
+     *
+     * @return bool
+     */
+    public function clear() {
+        return $this->flush();
+    }
+
+    /**
      * Set the cache key prefix.
      *
      * @param  string $prefix
@@ -275,7 +284,7 @@ abstract class AlternativeCacheStore extends TaggableStore implements Store {
     }
 
     /**
-     * @param CacheItem|TaggableItemInterface $item
+     * @param CacheItem $item
      * @return mixed
      */
     protected function decodeItem($item) {
@@ -322,7 +331,7 @@ abstract class AlternativeCacheStore extends TaggableStore implements Store {
      * @param mixed $value
      * @param $tags
      * @param int $duration
-     * @return CacheItem|TaggableItemInterface
+     * @return CacheItem
      * @throws \Psr\Cache\InvalidArgumentException
      */
     protected function newItem($key, $value, $tags = null, $duration = null) {

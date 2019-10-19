@@ -14,7 +14,7 @@ class AlternativeTagSet extends TagSet {
     protected $store;
 
     public function reset() {
-        $this->store->getWrappedConnection()->clearTags(array_map([$this, 'tagKey'], $this->names));
+        $this->store->getWrappedConnection()->invalidateTags(array_map([$this, 'tagKey'], $this->names));
     }
 
     public function getNamespace() {
@@ -27,7 +27,7 @@ class AlternativeTagSet extends TagSet {
 
     public function resetTag($name) {
         $key = $this->tagKey($name);
-        $this->store->getWrappedConnection()->clearTags([$key]);
+        $this->store->getWrappedConnection()->invalidateTag($key);
         return $key;
     }
 

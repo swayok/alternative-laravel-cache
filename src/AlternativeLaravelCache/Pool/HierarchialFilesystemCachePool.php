@@ -4,10 +4,10 @@ namespace AlternativeLaravelCache\Pool;
 
 use Cache\Adapter\Common\AbstractCachePool;
 use Cache\Adapter\Common\Exception\CachePoolException;
+use Cache\Adapter\Common\PhpCacheItem;
 use Cache\Hierarchy\HierarchicalCachePoolTrait;
 use Cache\Hierarchy\HierarchicalPoolInterface;
-use Cache\Taggable\TaggableItemInterface;
-use Cache\Taggable\TaggablePoolTrait;
+use Cache\TagInterop\TaggableCacheItemInterface;
 use League\Flysystem\FileNotFoundException;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Util;
@@ -17,8 +17,7 @@ class HierarchialFilesystemCachePool extends AbstractCachePool implements Hierar
 
     const CACHE_PATH = 'cache';
 
-    use TaggablePoolTrait,
-        HierarchicalCachePoolTrait;
+    use HierarchicalCachePoolTrait;
 
     /**
      * @type Filesystem
@@ -45,7 +44,7 @@ class HierarchialFilesystemCachePool extends AbstractCachePool implements Hierar
      * @throws \League\Flysystem\FileNotFoundException
      * @throws \InvalidArgumentException
      */
-    protected function getValueFormStore($key) {
+    protected function getDirectValue($key) {
         list($isHit, $value) = $this->fetchObjectFromCache($key);
         return $isHit ? $value : null;
     }
@@ -70,7 +69,7 @@ class HierarchialFilesystemCachePool extends AbstractCachePool implements Hierar
      * {@inheritdoc}
      */
     public function save(CacheItemInterface $item) {
-        if ($item instanceof TaggableItemInterface) {
+        if ($item instanceof TaggableCacheItemInterface) {
             $this->saveTags($item);
         }
 
@@ -83,14 +82,14 @@ class HierarchialFilesystemCachePool extends AbstractCachePool implements Hierar
      * @throws \League\Flysystem\FileNotFoundException
      * @throws \League\Flysystem\FileExistsException
      */
-    protected function storeItemInCache(CacheItemInterface $item, $ttl) {
+    protected function storeItemInCache(PhpCacheItem $item, $ttl) {
         $file = $this->getFilePath($item->getKey());
         if ($this->filesystem->has($file)) {
             $this->filesystem->delete($file);
         }
 
         $tags = [];
-        if ($item instanceof TaggableItemInterface) {
+        if ($item instanceof TaggableCacheItemInterface) {
             $tags = $item->getTags();
         }
 

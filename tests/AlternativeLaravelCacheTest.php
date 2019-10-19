@@ -7,66 +7,64 @@ use AlternativeLaravelCache\Store\AlternativeRedisCacheStore;
 
 class AlternativeLaravelCacheTest extends TestCase {
 
-    /**
+    /*
      * Config file cache.php:
-     [
-        'stores' => [
+        [
+            'client' => 'predis' //< or 'phpredis'
+            'stores' => [
+                'test_file' => [
+                    'driver' => 'file',
+                    'path' => storage_path('framework/cache/data'),
+                ],
 
-            'file' => [
-                'driver' => 'file',
-                'path' => storage_path('framework/cache/data'),
-            ],
+                'test_hierarchial_file' => [
+                    'driver' => 'hierarchial_file',
+                    'path' => storage_path('framework/cache/data'),
+                ],
 
-            'hierarchial_file' => [
-                'driver' => 'hierarchial_file',
-                'path' => storage_path('framework/cache/data'),
-            ],
-
-            'redis' => [
-                'driver' => 'redis',
-                'connection' => 'cache',
-            ],
-
-        ],
-
-        'prefix' => 'laravel/cache'
-     ]
+                'test_redis' => [
+                    'driver' => 'redis',
+                    'connection' => 'cache',
+                ],
+            ]
+            'prefix' => 'laravel/testcache'
+        ]
      */
 
     public function testNormalCache() {
-        \Cache::store('redis')->clear();
-        \Cache::store('file')->clear();
+        \Cache::store('test_redis')->clear();
+        \Cache::store('test_file')->clear();
         $key = 'key1|subkey/sskey\\ssskey';
-        \Cache::store('redis')->put($key, 'value1', 1);
-        $this->assertEquals('value1', \Cache::store('redis')->get($key));
-        \Cache::store('file')->put($key, 'value2', 1);
-        $this->assertEquals('value2', \Cache::store('file')->get($key));
+        \Cache::store('test_redis')->put($key, 'value1', 1);
+        $this->assertEquals('value1', \Cache::store('test_redis')->get($key));
+        \Cache::store('test_file')->put($key, 'value2', 1);
+        $this->assertEquals('value2', \Cache::store('test_file')->get($key));
     }
 
     public function testHierarchialFileCache() {
-        \Cache::store('file')->clear();
+        \Cache::store('test_file')->clear();
         $key1 = 'key1|subkey1';
-        \Cache::store('hierarchial_file')->put($key1, 'value1', 1);
-        $this->assertEquals('value1', \Cache::store('hierarchial_file')->get($key1));
+        \Cache::store('test_hierarchial_file')->put($key1, 'value1', 1);
+        $this->assertEquals('value1', \Cache::store('test_hierarchial_file')->get($key1));
         $key2 = 'key1|subkey2';
-        \Cache::store('hierarchial_file')->put($key2, 'value2', 1);
-        $this->assertEquals('value2', \Cache::store('hierarchial_file')->get($key2));
+        \Cache::store('test_hierarchial_file')->put($key2, 'value2', 1);
+        $this->assertEquals('value2', \Cache::store('test_hierarchial_file')->get($key2));
         $key3 = 'key2|subkey1';
-        \Cache::store('hierarchial_file')->put($key3, 'value3', 1);
-        $this->assertEquals('value3', \Cache::store('hierarchial_file')->get($key3));
-        \Cache::store('hierarchial_file')->delete('key1');
-        $this->assertNull(\Cache::store('hierarchial_file')->get($key1));
-        $this->assertNull(\Cache::store('hierarchial_file')->get($key2));
-        $this->assertEquals('value3', \Cache::store('hierarchial_file')->get($key3));
+        \Cache::store('test_hierarchial_file')->put($key3, 'value3', 1);
+        $this->assertEquals('value3', \Cache::store('test_hierarchial_file')->get($key3));
+        \Cache::store('test_hierarchial_file')->delete('key1');
+        $this->assertNull(\Cache::store('test_hierarchial_file')->get($key1));
+        $this->assertNull(\Cache::store('test_hierarchial_file')->get($key2));
+        $this->assertEquals('value3', \Cache::store('test_hierarchial_file')->get($key3));
     }
 
     public function testTaggedCache() {
         /** @var AlternativeRedisCacheStore $redisStore */
-        $redisStore = \Cache::store('redis');
+        $redisStore = \Cache::store('test_redis');
         /** @var AlternativeFileCacheStore $fileStore */
-        $fileStore = \Cache::store('file');
+        $fileStore = \Cache::store('test_file');
         /** @var AlternativeFileCacheStore $hierarchialFileStore */
-        $hierarchialFileStore = \Cache::store('hierarchial_file');
+        $hierarchialFileStore = \Cache::store('test_hierarchial_file');
 
         $redisStore->flush();
         $fileStore->flush();

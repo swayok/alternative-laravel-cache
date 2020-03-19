@@ -307,7 +307,7 @@ abstract class AlternativeCacheStore extends TaggableStore implements Store {
      */
     protected function isDurationInSeconds() {
         if ($this->isDurationInSeconds === null) {
-            $this->isDurationInSeconds = preg_match('%^.*?(\d+\.\d+)%', \App::version(), $matches) && (float)$matches[1] >= 5.8;
+            $this->isDurationInSeconds = preg_match('%^.*?(\d+\.\d+)%', app()->version(), $matches) && (float)$matches[1] >= 5.8;
         }
         return $this->isDurationInSeconds;
     }

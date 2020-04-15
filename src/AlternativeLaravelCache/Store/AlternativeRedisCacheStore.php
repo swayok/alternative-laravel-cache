@@ -3,7 +3,9 @@
 namespace AlternativeLaravelCache\Store;
 
 use AlternativeLaravelCache\Core\AlternativeCacheStore;
+use Cache\Adapter\Common\AbstractCachePool;
 use Cache\Adapter\Predis\PredisCachePool;
+use Cache\Adapter\Redis\RedisCachePool;
 use Illuminate\Redis\RedisManager;
 
 /**
@@ -21,16 +23,22 @@ class AlternativeRedisCacheStore extends AlternativeCacheStore {
     /**
      * Wrap Redis connection with PredisCachePool
      *
-     * @return PredisCachePool
+     * @return PredisCachePool|RedisCachePool|AbstractCachePool
      */
     public function wrapConnection() {
-        return new PredisCachePool($this->getConnection());
+        $connection = $this->getConnection();
+        if (get_class($connection) === 'Redis') {
+            // PHPRedis extension client
+            return new RedisCachePool($connection);
+        } else {
+            return new PredisCachePool($connection);
+        }
     }
 
     /**
      * Get the Redis connection client
      *
-     * @return \Predis\Client|\Predis\ClientInterface
+     * @return \Predis\Client|\Predis\ClientInterface|\Redis
      */
     public function getConnection() {
         return $this->getDb()->connection($this->connection)->client();

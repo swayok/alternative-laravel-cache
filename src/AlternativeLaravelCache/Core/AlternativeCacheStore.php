@@ -5,8 +5,7 @@ namespace AlternativeLaravelCache\Core;
 use Cache\Adapter\Common\AbstractCachePool;
 use Cache\Adapter\Common\CacheItem;
 use Cache\Hierarchy\HierarchicalPoolInterface;
-use Cache\Taggable\TaggableItemInterface;
-use Cache\Taggable\TaggablePoolInterface;
+use Cache\TagInterop\TaggableCacheItemPoolInterface;
 use Illuminate\Cache\TaggableStore;
 use Illuminate\Contracts\Cache\Store;
 
@@ -41,7 +40,7 @@ abstract class AlternativeCacheStore extends TaggableStore implements Store {
     /**
      * Wrapped connection (see http://www.php-cache.com/)
      *
-     * @var AbstractCachePool|HierarchicalPoolInterface|TaggablePoolInterface
+     * @var AbstractCachePool|HierarchicalPoolInterface|TaggableCacheItemPoolInterface
      */
     protected $wrappedConnection = null;
 
@@ -91,7 +90,7 @@ abstract class AlternativeCacheStore extends TaggableStore implements Store {
     /**
      * Wraps DB connection with wrapper from http://www.php-cache.com/
      *
-     * @return AbstractCachePool|HierarchicalPoolInterface|TaggablePoolInterface
+     * @return AbstractCachePool|HierarchicalPoolInterface|TaggableCacheItemPoolInterface
      */
     abstract public function wrapConnection();
 
@@ -99,7 +98,7 @@ abstract class AlternativeCacheStore extends TaggableStore implements Store {
      * Get the connection client wrapper
      * All wrappers listed here: http://www.php-cache.com/
      *
-     * @return AbstractCachePool|HierarchicalPoolInterface|TaggablePoolInterface
+     * @return AbstractCachePool|HierarchicalPoolInterface|TaggableCacheItemPoolInterface
      */
     public function getWrappedConnection() {
         if ($this->wrappedConnection === null) {
@@ -256,6 +255,15 @@ abstract class AlternativeCacheStore extends TaggableStore implements Store {
     }
 
     /**
+     * Remove all items from the cache.
+     *
+     * @return bool
+     */
+    public function clear() {
+        return $this->flush();
+    }
+
+    /**
      * Set the cache key prefix.
      *
      * @param  string $prefix
@@ -276,7 +284,7 @@ abstract class AlternativeCacheStore extends TaggableStore implements Store {
     }
 
     /**
-     * @param CacheItem|TaggableItemInterface $item
+     * @param CacheItem $item
      * @return mixed
      */
     protected function decodeItem($item) {
@@ -299,7 +307,7 @@ abstract class AlternativeCacheStore extends TaggableStore implements Store {
      */
     protected function isDurationInSeconds() {
         if ($this->isDurationInSeconds === null) {
-            $this->isDurationInSeconds = preg_match('%^.*?(\d+\.\d+)%', \App::version(), $matches) && (float)$matches[1] >= 5.8;
+            $this->isDurationInSeconds = preg_match('%^.*?(\d+\.\d+)%', app()->version(), $matches) && (float)$matches[1] >= 5.8;
         }
         return $this->isDurationInSeconds;
     }
@@ -323,7 +331,7 @@ abstract class AlternativeCacheStore extends TaggableStore implements Store {
      * @param mixed $value
      * @param $tags
      * @param int $duration
-     * @return CacheItem|TaggableItemInterface
+     * @return CacheItem
      * @throws \Psr\Cache\InvalidArgumentException
      */
     protected function newItem($key, $value, $tags = null, $duration = null) {

@@ -6,7 +6,7 @@ use AlternativeLaravelCache\Core\AlternativeCacheStore;
 use AlternativeLaravelCache\Pool\HierarchialFilesystemCachePool;
 use Cache\Adapter\Common\AbstractCachePool;
 use Cache\Hierarchy\HierarchicalPoolInterface;
-use Cache\Taggable\TaggablePoolInterface;
+use Cache\TagInterop\TaggableCacheItemPoolInterface;
 use League\Flysystem\Filesystem;
 
 class AlternativeHierarchialFileCacheStore extends AlternativeCacheStore {
@@ -21,7 +21,7 @@ class AlternativeHierarchialFileCacheStore extends AlternativeCacheStore {
     /**
      * Wraps DB connection with wrapper from http://www.php-cache.com/
      *
-     * @return AbstractCachePool|HierarchicalPoolInterface|TaggablePoolInterface
+     * @return AbstractCachePool|HierarchicalPoolInterface|TaggableCacheItemPoolInterface
      */
     public function wrapConnection() {
         return new HierarchialFilesystemCachePool($this->getDb());

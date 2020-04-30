@@ -155,7 +155,7 @@ abstract class AlternativeCacheStore extends TaggableStore implements Store {
      * @throws \Psr\Cache\InvalidArgumentException
      */
     public function put($key, $value, $duration) {
-        $this->getWrappedConnection()->save($this->newItem($key, $value, $this->_pullTags(), $duration));
+        return $this->getWrappedConnection()->save($this->newItem($key, $value, $this->_pullTags(), $duration));
     }
 
     /**
@@ -173,7 +173,7 @@ abstract class AlternativeCacheStore extends TaggableStore implements Store {
         foreach ($values as $key => $value) {
             $this->getWrappedConnection()->saveDeferred($this->newItem($key, $value, $tags));
         }
-        $this->getWrappedConnection()->commit();
+        return $this->getWrappedConnection()->commit();
     }
 
     /**
@@ -225,7 +225,7 @@ abstract class AlternativeCacheStore extends TaggableStore implements Store {
      * @throws \Psr\Cache\InvalidArgumentException
      */
     public function forever($key, $value) {
-        $this->getWrappedConnection()->save($this->newItem($key, $value, $this->_pullTags()));
+        return $this->getWrappedConnection()->save($this->newItem($key, $value, $this->_pullTags()));
     }
 
     /**

@@ -47,10 +47,6 @@ How it works with this lib:
 
 ## How to use it:
 
-### For Laravel 5.6+
-
-Nothing is needed, package auto-discovery will work.
-
 ### For Laravel 5.4+
 
 Add to `composer.json`:
@@ -91,6 +87,12 @@ To use `php-redis` extension add to `composer.json:
     }
 
 ### Declare ServiceProvider
+
+### For Laravel 5.6+
+
+Package auto-discovery will work.
+
+### For Laravel < 5.6
 
 Add to `config/app.php`: 
 

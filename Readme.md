@@ -5,7 +5,7 @@ Cache pools provided by http://www.php-cache.com/ + I've added `HierarchialFiles
 cache system and cache pools from http://www.php-cache.com/ and my own pools.
 
 ## What is proper tagging?
-For example you have:
+For example, you have:
     
     Cache::tags(['tag1', 'tag2'])->put('tag-test1', 'ok', 20);
     
@@ -125,12 +125,12 @@ as it better represents path in file system.
         ],
     ],
     
-This permissions passed to `vendor/league/flysystem/src/Adapter/Local.php` 
+These permissions passed to `vendor/league/flysystem/src/Adapter/Local.php` 
 and merged with default permissions. There are 2 types: `public` and `private`
-but only `public` permissions are used in `AlternativeLaravelCache`.
+but only `public` permissions will be used in `AlternativeLaravelCache`.
     
 ## Notes
-By default service provider will replace Laravel's `redis` and `file` cache stores. 
+By default, service provider will replace Laravel's `redis` and `file` cache stores. 
 You can alter this behavior like this:
 
     class MyAlternativeCacheStoresServiceProvider extends AlternativeCacheStoresServiceProvider {
@@ -139,6 +139,6 @@ You can alter this behavior like this:
     }
     
 File cache storage currently supports only `'driver' => 'file'`. You can extend list of file cache drivers by  
-overwriting `AlternativeCacheStoresServiceProvider->makeFileCacheAdapter()`
+overwriting `AlternativeCacheStoresServiceProvider->makeFileCacheAdapter()`.
 
-Yep, there are not much tests right now and possibly there will never be more. 
+Yep, there are not many tests right now and possibly there will never be more. 

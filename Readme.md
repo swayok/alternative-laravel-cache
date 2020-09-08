@@ -67,12 +67,27 @@ Add to `composer.json`:
         "swayok/alternative-laravel-cache": "5.3.*"
     }
     
-### Redis support
+### Filesystem support
 
 Add to `composer.json`:
 
     "require": {
-        "predis/predis": "*"
+        "filesystem-adapter": "^1.0"
+    }
+    
+### Redis support
+
+To use `predis` add to `composer.json`:
+
+    "require": {
+        "cache/predis-adapter": "^1.0"
+    }
+    
+To use `php-redis` extension add to `composer.json:
+
+    "require": {
+        "ext-redis": "*",
+        "cache/redis-adapter": "^1.0"
     }
 
 ### Declare ServiceProvider

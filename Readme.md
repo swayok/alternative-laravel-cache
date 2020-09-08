@@ -72,7 +72,7 @@ Add to `composer.json`:
 Add to `composer.json`:
 
     "require": {
-        "filesystem-adapter": "^1.0"
+        "cache/filesystem-adapter": "^1.0"
     }
     
 ### Redis support

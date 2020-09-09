@@ -45,7 +45,7 @@ class HierarchialFilesystemCachePool extends AbstractCachePool implements Hierar
      * @throws \InvalidArgumentException
      */
     protected function getDirectValue($key) {
-        list($isHit, $value) = $this->fetchObjectFromCache($key);
+        [$isHit, $value] = $this->fetchObjectFromCache($key);
         return $isHit ? $value : null;
     }
 
@@ -245,7 +245,7 @@ class HierarchialFilesystemCachePool extends AbstractCachePool implements Hierar
             $tags = $this->getItem($key)->getTags();
         } catch (CachePoolException $exc) {
             if (!$exc->getPrevious() || strpos('file_get_contents(', $exc->getPrevious()->getMessage()) !== false) {
-                throw new $exc;
+                throw $exc;
             }
         }
         if (!empty($tags)) {

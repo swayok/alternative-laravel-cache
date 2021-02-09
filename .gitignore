@@ -1,2 +1,5 @@
 .env
 .idea
+composer.lock
+composer.phar
+vendor

@@ -5,7 +5,7 @@ namespace AlternativeLaravelCache\Provider;
 use AlternativeLaravelCache\Store\AlternativeFileCacheStore;
 use AlternativeLaravelCache\Store\AlternativeHierarchialFileCacheStore;
 use AlternativeLaravelCache\Store\AlternativeRedisCacheStore;
-use Doctrine\Instantiator\Exception\InvalidArgumentException;
+use InvalidArgumentException;
 use Illuminate\Cache\CacheManager;
 use Illuminate\Support\Arr;
 use Illuminate\Support\ServiceProvider;

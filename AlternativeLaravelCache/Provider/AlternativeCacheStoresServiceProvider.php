@@ -4,6 +4,7 @@ namespace AlternativeLaravelCache\Provider;
 
 use AlternativeLaravelCache\Store\AlternativeFileCacheStore;
 use AlternativeLaravelCache\Store\AlternativeHierarchialFileCacheStore;
+use AlternativeLaravelCache\Store\AlternativeMemcachedCacheStore;
 use AlternativeLaravelCache\Store\AlternativeRedisCacheStore;
 use InvalidArgumentException;
 use Illuminate\Cache\CacheManager;
@@ -15,6 +16,7 @@ use League\Flysystem\Filesystem;
 class AlternativeCacheStoresServiceProvider extends ServiceProvider {
 
     static protected $redisDriverName = 'redis';
+    static protected $memcacheDriverName = 'memcached';
     static protected $fileDriverName = 'file';
     static protected $hierarchialFileDriverName = 'hierarchial_file';
 
@@ -27,6 +29,7 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider {
     protected function addDriversToCacheManager() {
         $cacheManager = $this->app->make('cache');
         $this->addRedisCacheDriver($cacheManager);
+        $this->addMemcachedCacheDriver($cacheManager);
         $this->addFileCacheDriver($cacheManager);
         $this->addHierarchialFileCacheDriver($cacheManager);
     }
@@ -36,6 +39,25 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider {
         $cacheManager->extend(static::$redisDriverName, function ($app, array $cacheConfig) use ($provider, $cacheManager) {
             $store = new AlternativeRedisCacheStore(
                 $app['redis'],
+                $provider::getPrefix($cacheConfig),
+                $provider::getConnectionName($cacheConfig)
+            );
+            $store->getWrappedConnection()->setLogger(app('log'));
+            return $cacheManager->repository($store);
+        });
+    }
+    
+    protected function addMemcachedCacheDriver(CacheManager $cacheManager) {
+        $provider = $this;
+        $cacheManager->extend(static::$memcacheDriverName, function ($app, array $cacheConfig) use ($provider, $cacheManager) {
+            $memcached = $this->app['memcached.connector']->connect(
+                $cacheConfig['servers'],
+                $cacheConfig['persistent_id'] ?? null,
+                $cacheConfig['options'] ?? [],
+                array_filter($cacheConfig['sasl'] ?? [])
+            );
+            $store = new AlternativeMemcachedCacheStore(
+                $memcached,
                 $provider::getPrefix($cacheConfig),
                 $provider::getConnectionName($cacheConfig)
             );

@@ -10,7 +10,7 @@ use Illuminate\Cache\TaggableStore;
 use Illuminate\Contracts\Cache\LockProvider;
 use Illuminate\Contracts\Cache\Store;
 
-abstract class AlternativeCacheStore extends TaggableStore implements Store, LockProvider {
+abstract class AlternativeCacheStore extends TaggableStore implements LockProvider {
 
     /**
      * The database connection.
@@ -86,6 +86,7 @@ abstract class AlternativeCacheStore extends TaggableStore implements Store, Loc
      */
     public function setConnection($connection) {
         $this->connection = $connection;
+        $this->wrappedConnection = null;
     }
 
     /**

@@ -86,6 +86,17 @@ To use `php-redis` extension add to `composer.json:
         "cache/redis-adapter": "^1.0"
     }
 
+### Memcached support (NOT supported in Windows!)
+
+Add to `composer.json`:
+
+    "require": {
+        "ext-memcached": "*",
+        "cache/memcached-adapter": "^1.0"
+    }
+
+For Windows there are only `memcache` extension (without D at the end) but there are no such driver in Laravel.
+
 ### Declare ServiceProvider
 
 ### For Laravel 5.6+
@@ -103,6 +114,7 @@ Add to `config/app.php`:
 ### Supported cache drivers
 
 - `redis` - redis cache with proper tagging
+- `memcached` - memcached cache with proper tagging
 - `file` - file-based cache with proper tagging
 - `hierarchial_file` - hierarchial file-based cache with proper tagging (http://www.php-cache.com/en/latest/hierarchy/).
 This driver also supports `/` instead of `|` so you can use `/users/:uid/followers/:fid/likes` instead of `|users|:uid|followers|:fid|likes`
@@ -135,6 +147,7 @@ You can alter this behavior like this:
 
     class MyAlternativeCacheStoresServiceProvider extends AlternativeCacheStoresServiceProvider {
         static protected $redisDriverName = 'altredis';
+        static protected $memcacheDriverName = 'altmemcached';
         static protected $fileDriverName = 'altfile';
     }
     

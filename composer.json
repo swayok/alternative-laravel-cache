@@ -20,8 +20,8 @@
         "issues": "https://github.com/swayok/alternative-laravel-cache/issues"
     },
     "autoload": {
-        "psr-0": {
-            "AlternativeLaravelCache": "/src"
+        "psr-4": {
+            "AlternativeLaravelCache\\": "AlternativeLaravelCache/"
         }
     },
     "autoload-dev": {
@@ -40,12 +40,15 @@
     "require-dev": {
         "cache/redis-adapter": "^1.0",
         "cache/predis-adapter": "^1.0",
-        "cache/filesystem-adapter": "^1.0"
+        "cache/filesystem-adapter": "^1.0",
+        "cache/memcached-adapter": "^1.0",
+        "phpunit/phpunit": "^8.5"
     },
     "suggest": {
         "cache/redis-adapter": "Required to use Redis-based cache through php-redis extension (recommended - faster and more stable then predis)",
         "cache/predis-adapter": "Required to use Redis-based cache through predis/predis package",
-        "cache/filesystem-adapter": "Required to use file-based cache"
+        "cache/filesystem-adapter": "Required to use file-based cache",
+        "cache/memcached-adapter": "Required to use Memcache-based cache"
     },
     "extra": {
       "laravel": {

@@ -209,28 +209,4 @@ class AlternativeLaravelCacheTest extends TestCase {
         }
     }
     
-    public function testTaggedCacheConflicts() {
-        /** @var AlternativeRedisCacheStore|Repository $redisStore */
-        $redisStore = $this->getCache()->store('redis');
-        /** @var AlternativeFileCacheStore|Repository $fileStore */
-        $fileStore = $this->getCache()->store('file');
-        /** @var AlternativeFileCacheStore|Repository $hierarchialFileStore */
-        $hierarchialFileStore = $this->getCache()->store('hierarchial_file');
-    
-        $redisStore->flush();
-        $fileStore->flush();
-        $hierarchialFileStore->flush();
-    
-        $key = 'test';
-        $tag1 = 'tag1';
-        $tag2 = 'tag2';
-        
-        // redis
-        $redisStore->tags([$tag1])->remember($key, 1000, function () {
-            return 1;
-        });
-        static::assertEquals(1, $redisStore->get($key));
-        static::assertEquals(1, $redisStore->tags([$tag1])->get($key));
-        static::assertEquals(1, $redisStore->tags([$tag2])->get($key));
-    }
 }

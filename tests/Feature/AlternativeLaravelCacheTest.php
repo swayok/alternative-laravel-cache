@@ -3,9 +3,13 @@
 namespace Tests\Feature;
 
 use AlternativeLaravelCache\Store\AlternativeFileCacheStore;
+use AlternativeLaravelCache\Store\AlternativeFileCacheStoreWithLocks;
 use AlternativeLaravelCache\Store\AlternativeMemcachedCacheStore;
+use AlternativeLaravelCache\Store\AlternativeMemcachedCacheStoreWithLocks;
 use AlternativeLaravelCache\Store\AlternativeRedisCacheStore;
+use AlternativeLaravelCache\Store\AlternativeRedisCacheStoreWithLocks;
 use Illuminate\Cache\CacheManager;
+use Illuminate\Cache\Repository;
 use Tests\TestCase;
 
 class AlternativeLaravelCacheTest extends TestCase {
@@ -60,9 +64,9 @@ class AlternativeLaravelCacheTest extends TestCase {
     }
 
     public function testNormalCache() {
-        /** @var AlternativeRedisCacheStore $redisStore */
+        /** @var AlternativeRedisCacheStore|Repository $redisStore */
         $redisStore = $this->getCache()->store('redis');
-        /** @var AlternativeFileCacheStore $fileStore */
+        /** @var AlternativeFileCacheStore|Repository $fileStore */
         $fileStore = $this->getCache()->store('file');
 
         $redisStore->flush();
@@ -77,7 +81,7 @@ class AlternativeLaravelCacheTest extends TestCase {
     
     public function testMemcachedCache() {
         if (class_exists('\Memcached')) {
-            /** @var AlternativeMemcachedCacheStore $memcachedStore */
+            /** @var AlternativeMemcachedCacheStore|Repository $memcachedStore */
             $memcachedStore = $this->getCache()
                 ->store('memcached');
     
@@ -86,11 +90,13 @@ class AlternativeLaravelCacheTest extends TestCase {
             $key = 'key1|subkey/sskey\\ssskey';
             $memcachedStore->put($key, 'value3', 1);
             self::assertEquals('value3', $memcachedStore->get($key));
+        } else {
+            static::assertTrue(true);
         }
     }
 
     public function testHierarchialFileCache() {
-        /** @var AlternativeFileCacheStore $hierarchialFileStore */
+        /** @var AlternativeFileCacheStore|Repository $hierarchialFileStore */
         $hierarchialFileStore = $this->getCache()->store('hierarchial_file');
         $hierarchialFileStore->flush();
         $key1 = 'key1|subkey1';
@@ -109,11 +115,11 @@ class AlternativeLaravelCacheTest extends TestCase {
     }
 
     public function testTaggedCache() {
-        /** @var AlternativeRedisCacheStore $redisStore */
+        /** @var AlternativeRedisCacheStore|Repository $redisStore */
         $redisStore = $this->getCache()->store('redis');
-        /** @var AlternativeFileCacheStore $fileStore */
+        /** @var AlternativeFileCacheStore|Repository $fileStore */
         $fileStore = $this->getCache()->store('file');
-        /** @var AlternativeFileCacheStore $hierarchialFileStore */
+        /** @var AlternativeFileCacheStore|Repository $hierarchialFileStore */
         $hierarchialFileStore = $this->getCache()->store('hierarchial_file');
 
         $redisStore->flush();
@@ -148,5 +154,83 @@ class AlternativeLaravelCacheTest extends TestCase {
         self::assertNull($redisStore->get($key1));
         self::assertNull($fileStore->get($key1));
         self::assertNull($hierarchialFileStore->get($key1));
+    }
+    
+    public function testLocks() {
+        /** @var AlternativeRedisCacheStoreWithLocks|Repository $redisStore */
+        $redisStore = $this->getCache()->store('redis');
+        /** @var AlternativeFileCacheStoreWithLocks|Repository $fileStore */
+        $fileStore = $this->getCache()->store('file');
+        /** @var AlternativeFileCacheStoreWithLocks|Repository $hierarchialFileStore */
+        $hierarchialFileStore = $this->getCache()->store('hierarchial_file');
+    
+        $redisStore->flush();
+        $fileStore->flush();
+        $hierarchialFileStore->flush();
+    
+        // redis locks
+        static::assertTrue(method_exists($redisStore->getStore(), 'lock'));
+        static::assertTrue(method_exists($redisStore->getStore(), 'restoreLock'));
+        static::assertTrue(method_exists($redisStore->getStore(), 'setLockConnection'));
+        static::assertTrue(method_exists($redisStore->getStore(), 'lockConnection'));
+        $lock = $redisStore->lock('test', 10, 'tests');
+        $redisStore->restoreLock('test', 'tests');
+        $lock->release();
+        
+        // file locks
+        static::assertTrue(method_exists($fileStore->getStore(), 'lock'));
+        static::assertTrue(method_exists($fileStore->getStore(), 'restoreLock'));
+        $lock = $fileStore->lock('test', 10, 'tests');
+        $fileStore->restoreLock('test', 'tests');
+        $lock->release();
+    
+        // hierarchial file locks
+        static::assertTrue(method_exists($hierarchialFileStore->getStore(), 'lock'));
+        static::assertTrue(method_exists($hierarchialFileStore->getStore(), 'restoreLock'));
+        $lock = $hierarchialFileStore->lock('test', 10, 'tests');
+        $hierarchialFileStore->restoreLock('test', 'tests');
+        $lock->release();
+    }
+    
+    public function testMemcachedLocks() {
+        if (class_exists('\Memcached')) {
+            /** @var AlternativeMemcachedCacheStoreWithLocks|Repository $memcachedStore */
+            $memcachedStore = $this->getCache()->store('memcached');
+        
+            $memcachedStore->flush();
+    
+            static::assertTrue(method_exists($memcachedStore->getStore(), 'lock'));
+            static::assertTrue(method_exists($memcachedStore->getStore(), 'restoreLock'));
+            $lock = $memcachedStore->lock('test', 10, 'tests');
+            $memcachedStore->restoreLock('test', 'tests');
+            $lock->release();
+        } else {
+            static::assertTrue(true);
+        }
+    }
+    
+    public function testTaggedCacheConflicts() {
+        /** @var AlternativeRedisCacheStore|Repository $redisStore */
+        $redisStore = $this->getCache()->store('redis');
+        /** @var AlternativeFileCacheStore|Repository $fileStore */
+        $fileStore = $this->getCache()->store('file');
+        /** @var AlternativeFileCacheStore|Repository $hierarchialFileStore */
+        $hierarchialFileStore = $this->getCache()->store('hierarchial_file');
+    
+        $redisStore->flush();
+        $fileStore->flush();
+        $hierarchialFileStore->flush();
+    
+        $key = 'test';
+        $tag1 = 'tag1';
+        $tag2 = 'tag2';
+        
+        // redis
+        $redisStore->tags([$tag1])->remember($key, 1000, function () {
+            return 1;
+        });
+        static::assertEquals(1, $redisStore->get($key));
+        static::assertEquals(1, $redisStore->tags([$tag1])->get($key));
+        static::assertEquals(1, $redisStore->tags([$tag2])->get($key));
     }
 }

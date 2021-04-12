@@ -7,12 +7,9 @@ use AlternativeLaravelCache\Pool\HierarchialFilesystemCachePool;
 use Cache\Adapter\Common\AbstractCachePool;
 use Cache\Hierarchy\HierarchicalPoolInterface;
 use Cache\TagInterop\TaggableCacheItemPoolInterface;
-use Illuminate\Cache\HasCacheLock;
 use League\Flysystem\Filesystem;
 
 class AlternativeHierarchialFileCacheStore extends AlternativeCacheStore {
-
-    use HasCacheLock;
 
     /**
      * The Illuminate Filesystem instance.

@@ -7,10 +7,8 @@ use Cache\Adapter\Common\CacheItem;
 use Cache\Hierarchy\HierarchicalPoolInterface;
 use Cache\TagInterop\TaggableCacheItemPoolInterface;
 use Illuminate\Cache\TaggableStore;
-use Illuminate\Contracts\Cache\LockProvider;
-use Illuminate\Contracts\Cache\Store;
 
-abstract class AlternativeCacheStore extends TaggableStore implements LockProvider {
+abstract class AlternativeCacheStore extends TaggableStore {
 
     /**
      * The database connection.

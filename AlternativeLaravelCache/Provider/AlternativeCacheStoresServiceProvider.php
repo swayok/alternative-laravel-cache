@@ -3,13 +3,17 @@
 namespace AlternativeLaravelCache\Provider;
 
 use AlternativeLaravelCache\Store\AlternativeFileCacheStore;
+use AlternativeLaravelCache\Store\AlternativeFileCacheStoreWithLocks;
 use AlternativeLaravelCache\Store\AlternativeHierarchialFileCacheStore;
+use AlternativeLaravelCache\Store\AlternativeHierarchialFileCacheStoreWithLocks;
 use AlternativeLaravelCache\Store\AlternativeMemcachedCacheStore;
+use AlternativeLaravelCache\Store\AlternativeMemcachedCacheStoreWithLocks;
 use AlternativeLaravelCache\Store\AlternativeRedisCacheStore;
-use InvalidArgumentException;
+use AlternativeLaravelCache\Store\AlternativeRedisCacheStoreWithLocks;
 use Illuminate\Cache\CacheManager;
 use Illuminate\Support\Arr;
 use Illuminate\Support\ServiceProvider;
+use InvalidArgumentException;
 use League\Flysystem\Adapter\Local;
 use League\Flysystem\Filesystem;
 
@@ -28,59 +32,84 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider {
 
     protected function addDriversToCacheManager() {
         $cacheManager = $this->app->make('cache');
-        $this->addRedisCacheDriver($cacheManager);
-        $this->addMemcachedCacheDriver($cacheManager);
-        $this->addFileCacheDriver($cacheManager);
-        $this->addHierarchialFileCacheDriver($cacheManager);
+        $hasLocks = trait_exists('\Illuminate\Cache\HasCacheLock');
+        $this->addRedisCacheDriver($cacheManager, $hasLocks);
+        $this->addMemcachedCacheDriver($cacheManager, $hasLocks);
+        $this->addFileCacheDriver($cacheManager, $hasLocks);
+        $this->addHierarchialFileCacheDriver($cacheManager, $hasLocks);
     }
 
-    protected function addRedisCacheDriver(CacheManager $cacheManager) {
+    protected function addRedisCacheDriver(CacheManager $cacheManager, bool $hasLocks) {
         $provider = $this;
-        $cacheManager->extend(static::$redisDriverName, function ($app, array $cacheConfig) use ($provider, $cacheManager) {
-            $store = new AlternativeRedisCacheStore(
-                $app['redis'],
-                $provider::getPrefix($cacheConfig),
-                $provider::getConnectionName($cacheConfig)
-            );
+        $cacheManager->extend(static::$redisDriverName, function ($app, array $cacheConfig) use ($hasLocks, $provider, $cacheManager) {
+            if ($hasLocks) {
+                $store = new AlternativeRedisCacheStoreWithLocks(
+                    $app['redis'],
+                    $provider::getPrefix($cacheConfig),
+                    $provider::getConnectionName($cacheConfig)
+                );
+            } else {
+                $store = new AlternativeRedisCacheStore(
+                    $app['redis'],
+                    $provider::getPrefix($cacheConfig),
+                    $provider::getConnectionName($cacheConfig)
+                );
+            }
             $store->getWrappedConnection()->setLogger(app('log'));
             return $cacheManager->repository($store);
         });
     }
     
-    protected function addMemcachedCacheDriver(CacheManager $cacheManager) {
+    protected function addMemcachedCacheDriver(CacheManager $cacheManager, bool $hasLocks) {
         $provider = $this;
-        $cacheManager->extend(static::$memcacheDriverName, function ($app, array $cacheConfig) use ($provider, $cacheManager) {
+        $cacheManager->extend(static::$memcacheDriverName, function ($app, array $cacheConfig) use ($hasLocks, $provider, $cacheManager) {
             $memcached = $this->app['memcached.connector']->connect(
                 $cacheConfig['servers'],
                 $cacheConfig['persistent_id'] ?? null,
                 $cacheConfig['options'] ?? [],
                 array_filter($cacheConfig['sasl'] ?? [])
             );
-            $store = new AlternativeMemcachedCacheStore(
-                $memcached,
-                $provider::getPrefix($cacheConfig),
-                $provider::getConnectionName($cacheConfig)
-            );
+            if ($hasLocks) {
+                $store = new AlternativeMemcachedCacheStoreWithLocks(
+                    $memcached,
+                    $provider::getPrefix($cacheConfig),
+                    $provider::getConnectionName($cacheConfig)
+                );
+            } else {
+                $store = new AlternativeMemcachedCacheStore(
+                    $memcached,
+                    $provider::getPrefix($cacheConfig),
+                    $provider::getConnectionName($cacheConfig)
+                );
+            }
             $store->getWrappedConnection()->setLogger(app('log'));
             return $cacheManager->repository($store);
         });
     }
 
-    protected function addFileCacheDriver(CacheManager $cacheManager) {
+    protected function addFileCacheDriver(CacheManager $cacheManager, bool $hasLocks) {
         $provider = $this;
-        $cacheManager->extend(static::$fileDriverName, function ($app, array $cacheConfig) use ($provider, $cacheManager) {
+        $cacheManager->extend(static::$fileDriverName, function ($app, array $cacheConfig) use ($hasLocks, $provider, $cacheManager) {
             $db = new Filesystem($provider::makeFileCacheAdapter($cacheConfig));
-            $store = new AlternativeFileCacheStore($db, $provider::getPrefix($cacheConfig));
+            if ($hasLocks) {
+                $store = new AlternativeFileCacheStoreWithLocks($db, $provider::getPrefix($cacheConfig));
+            } else {
+                $store = new AlternativeFileCacheStore($db, $provider::getPrefix($cacheConfig));
+            }
             $store->getWrappedConnection()->setLogger(app('log'));
             return $cacheManager->repository($store);
         });
     }
 
-    protected function addHierarchialFileCacheDriver(CacheManager $cacheManager) {
+    protected function addHierarchialFileCacheDriver(CacheManager $cacheManager, bool $hasLocks) {
         $provider = $this;
-        $cacheManager->extend(static::$hierarchialFileDriverName, function ($app, array $cacheConfig) use ($provider, $cacheManager) {
+        $cacheManager->extend(static::$hierarchialFileDriverName, function ($app, array $cacheConfig) use ($hasLocks, $provider, $cacheManager) {
             $db = new Filesystem($provider::makeFileCacheAdapter($cacheConfig));
-            $store = new AlternativeHierarchialFileCacheStore($db, $provider::getPrefix($cacheConfig));
+            if ($hasLocks) {
+                $store = new AlternativeHierarchialFileCacheStoreWithLocks($db, $provider::getPrefix($cacheConfig));
+            } else {
+                $store = new AlternativeHierarchialFileCacheStore($db, $provider::getPrefix($cacheConfig));
+            }
             $store->getWrappedConnection()->setLogger(app('log'));
             return $cacheManager->repository($store);
         });

@@ -6,12 +6,9 @@ use AlternativeLaravelCache\Core\AlternativeCacheStore;
 use Cache\Adapter\Common\AbstractCachePool;
 use Cache\Adapter\Filesystem\FilesystemCachePool;
 use Cache\TagInterop\TaggableCacheItemPoolInterface;
-use Illuminate\Cache\HasCacheLock;
 use League\Flysystem\Filesystem;
 
 class AlternativeFileCacheStore extends AlternativeCacheStore {
-
-    use HasCacheLock;
 
     /**
      * The Illuminate Filesystem instance.
@@ -42,5 +39,4 @@ class AlternativeFileCacheStore extends AlternativeCacheStore {
             $key
         ));
     }
-
 }

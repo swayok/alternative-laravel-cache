@@ -1,8 +1,9 @@
 # What is this?
 This is full-featured replacement for Laravel's Redis and file cache storages. All storages support proper tagging. 
 Cache pools provided by http://www.php-cache.com/ + I've added `HierarchialFilesystemCachePool` based on code of 
-`FilesystemCachePool` provided by http://www.php-cache.com/. All classes in this lib only proxies between Laravel's 
-cache system and cache pools from http://www.php-cache.com/ and my own pools.
+`FilesystemCachePool` provided by http://www.php-cache.com/. All classes in this lib are proxies between Laravel's 
+cache system and cache pools from http://www.php-cache.com/. I do not have any relation to php-cache.com and any cache pools there. 
+And in result I cannot fix or change anything to the way cache pools are working. 
 
 ## What is proper tagging?
 For example, you have:
@@ -28,6 +29,10 @@ How Laravel's native cache works with tags and Redis (Laravel 5.2):
 
 If you think that this is correct behavior - go away, you don't need this lib.
 
+I was quite confused when attempted to use Laravel's version of tagging. Laravel's version works like folders (hierarchial cache), but not like tags. 
+I tried to understand for what purpose Laravel's tagging can be used and haven't found any. It's totally useless in almost any situation. 
+Hopefully there are compatible drivers provided by http://www.php-cache.com/.
+
 How it works with this lib:
 
     Cache::tags(['tag1', 'tag2'])->get('tag-test1');    //< 'ok' - use Cache::get('tag-test1') instead
@@ -44,6 +49,20 @@ How it works with this lib:
     Cache::tags(['tag2'])->flush();                     //< deleted all cache entries with tag 'tag2'
     Cache::tags(['tag1', 'tag2'])->flush();             //< deleted all cache entries with tag 'tag1' or 'tag2'
     Cache::tags(['tag2', 'tag1'])->flush();             //< deleted all cache entries with tag 'tag2' or 'tag1'
+
+Note that tags here is like soft grouping for cache entries. 
+This means that you do not need to specify tags to access/set/delete certain cache key. 
+Cache key is the only thing you need to know to do this. 
+Tags purpose is to give you a possibility to delete lots of cache entries with one line of code.
+Tags are very useful when you need to store lots of entries related to same group and delete all cache entries at once when something changes.
+
+For example:
+1. You cache database records from `users` table in many places around you project tagging them with `users` tag.
+2. You cache database records from `orders` table tagging them with both `users` and `orders` tags.
+3. Some user updates his data and this action invalidates all cache entries related to this user and `users` table.
+4. You need to remove all cache entries related to `users` (1 and 2) and you can do this just like this: `Cache::tags(['users'])->flush();`.
+
+This way all cache entries created in 1 and 2 will be removed. Also you won't need to know tags to access any cache entry by its key.
 
 ## How to use it:
 

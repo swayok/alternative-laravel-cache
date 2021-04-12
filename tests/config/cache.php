@@ -36,7 +36,12 @@ return [
 
         'file' => [
             'driver' => 'file',
-            'path'   => storage_path('framework/cache'),
+            'path'   => storage_path('framework/cache/file'),
+        ],
+        
+        'hierarchial_file' => [
+            'driver' => 'hierarchial_file',
+            'path'   => storage_path('framework/cache/hierarchial_file'),
         ],
 
         'redis' => [

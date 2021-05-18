@@ -27,7 +27,9 @@ class AlternativeRedisCacheStore extends AlternativeCacheStore {
      */
     public function wrapConnection() {
         $connection = $this->getConnection();
-        if (get_class($connection) === 'Redis') {
+        $connectionClass = get_class($connection);
+
+        if ($connectionClass === 'Redis' || $connectionClass === 'RedisCluster') {
             // PHPRedis extension client
             return new RedisCachePool($connection);
         } else {

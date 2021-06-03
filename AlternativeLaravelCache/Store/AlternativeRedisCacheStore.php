@@ -3,9 +3,14 @@
 namespace AlternativeLaravelCache\Store;
 
 use AlternativeLaravelCache\Core\AlternativeCacheStore;
+use AlternativeLaravelCache\Pool\PredisCachePool;
+use AlternativeLaravelCache\Pool\RedisCachePool;
 use Cache\Adapter\Common\AbstractCachePool;
-use Cache\Adapter\Predis\PredisCachePool;
-use Cache\Adapter\Redis\RedisCachePool;
+use Illuminate\Redis\Connections\Connection;
+use Illuminate\Redis\Connections\PhpRedisClusterConnection;
+use Illuminate\Redis\Connections\PhpRedisConnection;
+use Illuminate\Redis\Connections\PredisClusterConnection;
+use Illuminate\Redis\Connections\PredisConnection;
 use Illuminate\Redis\RedisManager;
 
 /**
@@ -28,8 +33,11 @@ class AlternativeRedisCacheStore extends AlternativeCacheStore {
     public function wrapConnection() {
         $connection = $this->getConnection();
         $connectionClass = get_class($connection);
-
-        if ($connectionClass === 'Redis' || $connectionClass === 'RedisCluster') {
+    
+        if (
+            $connectionClass === 'Illuminate\Redis\Connections\PhpRedisConnection'
+            || $connectionClass === 'Illuminate\Redis\Connections\PhpRedisClusterConnection'
+        ) {
             // PHPRedis extension client
             return new RedisCachePool($connection);
         } else {
@@ -40,13 +48,12 @@ class AlternativeRedisCacheStore extends AlternativeCacheStore {
     /**
      * Get the Redis connection client
      *
-     * @return \Predis\Client|\Predis\ClientInterface|\Redis
+     * @return PhpRedisConnection|PhpRedisClusterConnection|PredisConnection|PredisClusterConnection|Connection
      */
     public function getConnection() {
         return $this
             ->getDb()
-            ->connection($this->connection)
-            ->client();
+            ->connection($this->connection);
     }
     
     public function setPrefix($prefix) {

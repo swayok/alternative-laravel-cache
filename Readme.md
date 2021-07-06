@@ -159,6 +159,35 @@ as it better represents path in file system.
 These permissions passed to `vendor/league/flysystem/src/Adapter/Local.php` 
 and merged with default permissions. There are 2 types: `public` and `private`
 but only `public` permissions will be used in `AlternativeLaravelCache`.
+
+## Pipe character in cache key
+Pipe character `|` in this library works as hierarchy separator. This means that 
+cache keys that contain `|` will work as hierarchy. Detals here: http://www.php-cache.com/en/latest/hierarchy/
+
+    // Put key with colons (treated as usual cache key)
+    Cache::put('cache-key:something:something-else', 'value', now()->addHours(6));
+    
+    // Put key with pipes (treated as hierarchial cache key)
+    Cache::put('cache-key|something|something-else', 'value', now()->addHours(6));
+    
+    // Get key with colons
+    Cache::get('cache-key:something:something-else');
+    "value"
+    
+    // Get key with pipes
+    Cache::get('cache-key|something|something-else');
+    "value"
+    
+    // Forget call (it will both remove the cache key called 'cache-key' and whole hierarchy)
+    Cache::forget('cache-key');
+    
+    // Get key with colons
+    Cache::get('cache-key:something:something-else');
+    "value"
+    
+    // Get key with pipes
+    Cache::get('cache-key|something|something-else');
+    null
     
 ## Notes
 By default, service provider will replace Laravel's `redis` and `file` cache stores. 

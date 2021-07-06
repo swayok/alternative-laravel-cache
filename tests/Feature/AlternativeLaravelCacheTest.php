@@ -192,6 +192,118 @@ class AlternativeLaravelCacheTest extends TestCase {
         $lock->release();
     }
     
+    public function testHierarchialCacheKeys() {
+        /** @var AlternativeRedisCacheStoreWithLocks|Repository $redisStore */
+        $redisStore = $this->getCache()->store('redis');
+        /** @var AlternativeFileCacheStoreWithLocks|Repository $fileStore */
+        $fileStore = $this->getCache()->store('file');
+        /** @var AlternativeFileCacheStoreWithLocks|Repository $hierarchialFileStore */
+        $hierarchialFileStore = $this->getCache()->store('hierarchial_file');
+    
+        $redisStore->flush();
+        $fileStore->flush();
+        $hierarchialFileStore->flush();
+    
+        $keyPiped = 'key1|subkey1|sskey1|ssskey1';
+        $keySlashed = 'key2/subkey2/sskey2/ssskey2';
+        $flushPipedKeyUsingPipe = 'key1|subkey1';
+        $flushPipiedKeyUsingSlash = 'key1/subkey1';
+        $flushSlashedKeyUsingPipe = 'key2|subkey2';
+        $flushSlashedKeyUsingSlash = 'key2/subkey2';
+    
+        $redisStore->put($keyPiped, 'value1', 1);
+        self::assertEquals('value1', $redisStore->get($keyPiped));
+        $redisStore->put($keySlashed, 'value11', 1);
+        self::assertEquals('value11', $redisStore->get($keySlashed));
+    
+        $fileStore->put($keyPiped, 'value2', 1);
+        self::assertEquals('value2', $fileStore->get($keyPiped));
+        $fileStore->put($keySlashed, 'value22', 1);
+        self::assertEquals('value22', $fileStore->get($keySlashed));
+    
+        $hierarchialFileStore->put($keyPiped, 'value3', 1);
+        self::assertEquals('value3', $hierarchialFileStore->get($keyPiped));
+        $hierarchialFileStore->put($keySlashed, 'value33', 1);
+        self::assertEquals('value33', $hierarchialFileStore->get($keySlashed));
+    
+        // $keyPiped -> flush by $flushPipedKeyUsingPipe
+    
+        $redisStore->forget($flushPipedKeyUsingPipe);
+        $fileStore->forget($flushPipedKeyUsingPipe);
+        $hierarchialFileStore->forget($flushPipedKeyUsingPipe);
+    
+        self::assertNull($redisStore->get($keyPiped));
+        self::assertEquals('value2', $fileStore->get($keyPiped));
+        self::assertNull($hierarchialFileStore->get($keyPiped));
+        self::assertEquals('value11', $redisStore->get($keySlashed));
+        self::assertEquals('value22', $fileStore->get($keySlashed));
+        self::assertEquals('value33', $hierarchialFileStore->get($keySlashed));
+        
+        // $keyPiped -> flush by $flushPipiedKeyUsingSlash
+    
+        $redisStore->put($keyPiped, 'value1', 1);
+        $redisStore->put($keySlashed, 'value11', 1);
+        $fileStore->put($keyPiped, 'value2', 1);
+        $fileStore->put($keySlashed, 'value22', 1);
+        $hierarchialFileStore->put($keyPiped, 'value3', 1);
+        $hierarchialFileStore->put($keySlashed, 'value33', 1);
+    
+        $redisStore->forget($flushPipiedKeyUsingSlash);
+        $fileStore->forget($flushPipiedKeyUsingSlash);
+        $hierarchialFileStore->forget($flushPipiedKeyUsingSlash);
+    
+        self::assertEquals('value1', $redisStore->get($keyPiped));
+        self::assertEquals('value2', $fileStore->get($keyPiped));
+        self::assertNull($hierarchialFileStore->get($keyPiped));
+        self::assertEquals('value11', $redisStore->get($keySlashed));
+        self::assertEquals('value22', $fileStore->get($keySlashed));
+        self::assertEquals('value33', $hierarchialFileStore->get($keySlashed));
+    
+        // $keySlashed -> flush by $flushSlashedKeyUsingPipe
+    
+        $redisStore->put($keyPiped, 'value1', 1);
+        $redisStore->put($keySlashed, 'value11', 1);
+        $fileStore->put($keyPiped, 'value2', 1);
+        $fileStore->put($keySlashed, 'value22', 1);
+        $hierarchialFileStore->put($keyPiped, 'value3', 1);
+        $hierarchialFileStore->put($keySlashed, 'value33', 1);
+    
+        $redisStore->forget($flushSlashedKeyUsingPipe);
+        $fileStore->forget($flushSlashedKeyUsingPipe);
+        $hierarchialFileStore->forget($flushSlashedKeyUsingPipe);
+    
+        self::assertEquals('value1', $redisStore->get($keyPiped));
+        self::assertEquals('value2', $fileStore->get($keyPiped));
+        self::assertEquals('value3', $hierarchialFileStore->get($keyPiped));
+        self::assertEquals('value11', $redisStore->get($keySlashed));
+        self::assertEquals('value22', $fileStore->get($keySlashed));
+        self::assertNull($hierarchialFileStore->get($keySlashed));
+    
+        // $keySlashed -> flush by $flushSlashedKeyUsingSlash
+    
+        $redisStore->put($keyPiped, 'value1', 1);
+        $redisStore->put($keySlashed, 'value11', 1);
+        $fileStore->put($keyPiped, 'value2', 1);
+        $fileStore->put($keySlashed, 'value22', 1);
+        $hierarchialFileStore->put($keyPiped, 'value3', 1);
+        $hierarchialFileStore->put($keySlashed, 'value33', 1);
+    
+        $redisStore->forget($flushSlashedKeyUsingSlash);
+        $fileStore->forget($flushSlashedKeyUsingSlash);
+        $hierarchialFileStore->forget($flushSlashedKeyUsingSlash);
+    
+        self::assertEquals('value1', $redisStore->get($keyPiped));
+        self::assertEquals('value2', $fileStore->get($keyPiped));
+        self::assertEquals('value3', $hierarchialFileStore->get($keyPiped));
+        self::assertEquals('value11', $redisStore->get($keySlashed));
+        self::assertEquals('value22', $fileStore->get($keySlashed));
+        self::assertNull($hierarchialFileStore->get($keySlashed));
+    
+        $redisStore->flush();
+        $fileStore->flush();
+        $hierarchialFileStore->flush();
+    }
+    
     public function testMemcachedLocks() {
         if (class_exists('\Memcached')) {
             /** @var AlternativeMemcachedCacheStoreWithLocks|Repository $memcachedStore */

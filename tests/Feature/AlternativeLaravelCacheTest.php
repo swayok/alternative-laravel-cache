@@ -10,6 +10,7 @@ use AlternativeLaravelCache\Store\AlternativeRedisCacheStore;
 use AlternativeLaravelCache\Store\AlternativeRedisCacheStoreWithLocks;
 use Illuminate\Cache\CacheManager;
 use Illuminate\Cache\Repository;
+use Predis\Collection\Iterator\Keyspace;
 use Tests\TestCase;
 
 class AlternativeLaravelCacheTest extends TestCase {
@@ -319,6 +320,43 @@ class AlternativeLaravelCacheTest extends TestCase {
         } else {
             static::assertTrue(true);
         }
+    }
+    
+    public function testRedisKeysCreation() {
+        /** @var AlternativeRedisCacheStoreWithLocks|Repository $redisStore */
+        $redisStore = $this->getCache()->store('redis');
+        $redisStore->flush();
+        $this->assertCount(0, $this->getRedisKeys());
+    
+        $key1 = 'key1';
+        $redisStore->put($key1, 'value1', 1);
+        self::assertEquals('value1', $redisStore->get($key1));
+        $keySha1 = sha1(str_replace('|', '!!!', 'root' . $redisStore->itemKey($key1) . '|'));
+        //something like 'root!!!alternative_laravel_cache_test!!!key1!!!'
+        $this->assertEquals([config('database.redis.options.prefix') . $keySha1], $this->getRedisKeys());
+    }
+    
+    private function getRedisKeys(): array {
+        /** @var AlternativeRedisCacheStoreWithLocks|Repository $redisStore */
+        $redisStore = $this->getCache()->store('redis');
+        $client = $redisStore->getConnection();
+        if ($client instanceof \Redis) {
+            $keys = [];
+            $it = null;
+            do {
+                $newKeys = $client->scan($it, '*', 1000);
+                if (!empty($newKeys)) {
+                    $keys += $newKeys;
+                }
+            } while ($it > 0 && !empty($newKeys));
+        } else {
+            $iterator = new Keyspace($client, null, 1000);
+            $keys = [];
+            foreach ($iterator as $key) {
+                $keys[] = $key;
+            }
+        }
+        return $keys;
     }
     
 }

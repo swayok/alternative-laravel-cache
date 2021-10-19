@@ -26,15 +26,17 @@ class AlternativeRedisCacheStore extends AlternativeCacheStore {
      * @return PredisCachePool|RedisCachePool|AbstractCachePool
      */
     public function wrapConnection() {
-        $connection = $this->getConnection();
-        $connectionClass = get_class($connection);
-
-        if ($connectionClass === 'Redis' || $connectionClass === 'RedisCluster') {
+        if ($this->isPhpRedis()) {
             // PHPRedis extension client
-            return new RedisCachePool($connection);
+            return new RedisCachePool($this->getConnection());
         } else {
-            return new PredisCachePool($connection);
+            return new PredisCachePool($this->getConnection());
         }
+    }
+    
+    protected function isPhpRedis(): bool {
+        $connectionClass = get_class($this->getConnection());
+        return $connectionClass === 'Redis' || $connectionClass === 'RedisCluster';
     }
     
     /**

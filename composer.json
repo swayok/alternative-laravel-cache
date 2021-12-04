@@ -30,7 +30,7 @@
         }
     },
     "require": {
-        "php": "^7.2.5|^8.0",
+        "php": "^7.2.5|^8.0|^8.1",
         "laravel/framework": ">=6.0|>=7.0|>=8.0",
         "cache/adapter-common": "^1.0.0",
         "cache/hierarchical-cache": "^1.0.0",

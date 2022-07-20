@@ -3,7 +3,8 @@
 namespace AlternativeLaravelCache\Store;
 
 use AlternativeLaravelCache\Core\AlternativeCacheStore;
-use AlternativeLaravelCache\Pool\HierarchialFilesystemCachePool;
+use AlternativeLaravelCache\Pool\HierarchialFilesystemCachePoolFlysystem1;
+use AlternativeLaravelCache\Pool\HierarchialFilesystemCachePoolFlysystem3;
 use Cache\Adapter\Common\AbstractCachePool;
 use Cache\Hierarchy\HierarchicalPoolInterface;
 use Cache\TagInterop\TaggableCacheItemPoolInterface;
@@ -24,7 +25,11 @@ class AlternativeHierarchialFileCacheStore extends AlternativeCacheStore {
      * @return AbstractCachePool|HierarchicalPoolInterface|TaggableCacheItemPoolInterface
      */
     public function wrapConnection() {
-        return new HierarchialFilesystemCachePool($this->getDb());
+        if (class_exists('League\Flysystem\Adapter\Local')) {
+            return new HierarchialFilesystemCachePoolFlysystem1($this->getDb());
+        } else {
+            return new HierarchialFilesystemCachePoolFlysystem3($this->getDb());
+        }
     }
 
     public function setPrefix($prefix) {

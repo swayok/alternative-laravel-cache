@@ -11,7 +11,7 @@ use Cache\TagInterop\TaggableCacheItemInterface;
 use League\Flysystem\Filesystem;
 use Psr\Cache\CacheItemInterface;
 
-class HierarchialFilesystemCachePool extends AbstractCachePool implements HierarchicalPoolInterface {
+class HierarchialFilesystemCachePoolFlysystem3 extends AbstractCachePool implements HierarchicalPoolInterface {
 
     public const CACHE_PATH = 'cache';
 

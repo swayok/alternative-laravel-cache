@@ -15,9 +15,6 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\ServiceProvider;
 use InvalidArgumentException;
 use League\Flysystem\Filesystem;
-use League\Flysystem\Local\LocalFilesystemAdapter;
-use League\Flysystem\UnixVisibility\PortableVisibilityConverter;
-use League\Flysystem\Visibility;
 
 class AlternativeCacheStoresServiceProvider extends ServiceProvider {
 
@@ -128,16 +125,26 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider {
         });
     }
 
-    public static function makeFileCacheAdapter(array $cacheConfig): LocalFilesystemAdapter {
+    public static function makeFileCacheAdapter(array $cacheConfig) {
         switch (strtolower($cacheConfig['driver'])) {
             case static::$fileDriverName:
             case static::$hierarchialFileDriverName:
-                return new LocalFilesystemAdapter(
-                    $cacheConfig['path'],
-                    PortableVisibilityConverter::fromArray(static::getNormalizedPermissions($cacheConfig), Visibility::PUBLIC),
-                    LOCK_EX,
-                    LocalFilesystemAdapter::DISALLOW_LINKS,
-                );
+                $permissions = static::getNormalizedPermissions($cacheConfig);
+                if (class_exists('League\Flysystem\Adapter\Local')) {
+                    return new \League\Flysystem\Adapter\Local(
+                        $cacheConfig['path'],
+                        LOCK_EX,
+                        \League\Flysystem\Adapter\Local::DISALLOW_LINKS,
+                        $permissions
+                    );
+                } else {
+                    return new \League\Flysystem\Local\LocalFilesystemAdapter(
+                        $cacheConfig['path'],
+                        \League\Flysystem\UnixVisibility\PortableVisibilityConverter::fromArray($permissions, \League\Flysystem\Visibility::PUBLIC),
+                        LOCK_EX,
+                        \League\Flysystem\Local\LocalFilesystemAdapter::DISALLOW_LINKS,
+                    );
+                }
             default:
                 throw new InvalidArgumentException("File cache driver [{$cacheConfig['driver']}] is not supported.
                     You can add support for drivers by overwriting " . __CLASS__ . '->makeFileCacheAdapter() method');

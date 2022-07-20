@@ -43,7 +43,7 @@ class AlternativeTaggedCache extends TaggedCache {
      */
     public function put($key, $value, $ttl = null) {
         $this->sendTagsToStore();
-        return parent::put($key, $value, $ttl);
+        parent::put($key, $value, $ttl);
     }
 
     /**
@@ -55,7 +55,7 @@ class AlternativeTaggedCache extends TaggedCache {
      */
     public function putMany(array $values, $ttl = null) {
         $this->sendTagsToStore();
-        return parent::putMany($values, $ttl);
+        parent::putMany($values, $ttl);
     }
 
     /**
@@ -67,9 +67,9 @@ class AlternativeTaggedCache extends TaggedCache {
      */
     public function forever($key, $value) {
         $this->sendTagsToStore();
-        return parent::forever($key, $value);
+        parent::forever($key, $value);
     }
-
+    
     /**
      * @return AlternativeCacheStore
      */
@@ -80,7 +80,7 @@ class AlternativeTaggedCache extends TaggedCache {
     /**
      * @return AlternativeCacheStore
      */
-    protected function sendTagsToStore() {
+    protected function sendTagsToStore(): AlternativeCacheStore {
         return $this->getStore()->_setTagsForNextOperation($this->tags->getKeys());
     }
 
@@ -95,10 +95,6 @@ class AlternativeTaggedCache extends TaggedCache {
     }
 
     /**
-     * Needed to prevent laravel's tag key modification
-     *
-     * @param string $key
-     * @return string
      * @throws \BadMethodCallException
      */
     public function taggedItemKey($key) {
@@ -107,11 +103,8 @@ class AlternativeTaggedCache extends TaggedCache {
 
     /**
      * Set the cache key prefix.
-     *
-     * @param  string $prefix
-     * @return void
      */
-    public function setPrefix($prefix) {
+    public function setPrefix(string $prefix): void {
         $this->prefix = $prefix;
     }
 

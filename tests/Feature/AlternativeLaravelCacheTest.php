@@ -62,7 +62,6 @@ class AlternativeLaravelCacheTest extends TestCase {
     }
     
     protected function tearDown(): void {
-        parent::tearDown();
         /** @var AlternativeRedisCacheStore|Repository $redisStore */
         $redisStore = $this->getCache()->store('redis');
         /** @var AlternativeFileCacheStore|Repository $fileStore */
@@ -71,8 +70,10 @@ class AlternativeLaravelCacheTest extends TestCase {
         $hierarchialFileStore = $this->getCache()->store('hierarchial_file');
     
         $redisStore->flush();
-        $fileStore->flush();
+//        $fileStore->flush();
         $hierarchialFileStore->flush();
+    
+        parent::tearDown();
     }
     
     public function testNormalCache(): void {
@@ -167,6 +168,25 @@ class AlternativeLaravelCacheTest extends TestCase {
         $hierarchialFileStore->tags(['tag1'])->flush();
         self::assertEquals('value33', $hierarchialFileStore->get($key2));
         self::assertNull($hierarchialFileStore->get($key1));
+    }
+    
+    public function testTaggedCacheFlushForFiles() {
+        /** @var AlternativeFileCacheStore|Repository $fileStore */
+        $fileStore = $this->getCache()->store('file');
+        
+        $fileStore->flush();
+    
+        $key1 = 'key1';
+        $key2 = 'key2';
+    
+        $fileStore->tags(['tag1', 'tag2'])->put($key1, 'value2', 1);
+        self::assertEquals('value2', $fileStore->get($key1));
+        $fileStore->tags(['tag3'])->put($key2, 'value22', 1);
+        self::assertEquals('value22', $fileStore->get($key2));
+    
+        $fileStore->tags(['tag1'])->flush();
+        self::assertEquals('value22', $fileStore->get($key2));
+        self::assertNull($fileStore->get($key1));
     }
     
     public function testLocks(): void {

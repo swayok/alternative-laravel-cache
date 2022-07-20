@@ -37,6 +37,10 @@ return [
         'file' => [
             'driver' => 'file',
             'path'   => storage_path('framework/cache/file'),
+            'permissions' => [
+                'file' => 0644,
+                'dir' => 0755
+            ]
         ],
         
         'hierarchial_file' => [

@@ -8,41 +8,27 @@ use Cache\Adapter\Common\PhpCacheItem;
 use Cache\Hierarchy\HierarchicalCachePoolTrait;
 use Cache\Hierarchy\HierarchicalPoolInterface;
 use Cache\TagInterop\TaggableCacheItemInterface;
-use League\Flysystem\FileNotFoundException;
 use League\Flysystem\Filesystem;
-use League\Flysystem\Util;
 use Psr\Cache\CacheItemInterface;
 
 class HierarchialFilesystemCachePool extends AbstractCachePool implements HierarchicalPoolInterface {
 
-    const CACHE_PATH = 'cache';
+    public const CACHE_PATH = 'cache';
 
     use HierarchicalCachePoolTrait;
 
     /**
      * @type Filesystem
      */
-    protected $filesystem;
+    protected Filesystem $filesystem;
 
-    /**
-     * @param Filesystem $filesystem
-     */
     public function __construct(Filesystem $filesystem) {
         $this->filesystem = $filesystem;
-        $this->filesystem->createDir(self::CACHE_PATH);
+        $this->filesystem->createDirectory(self::CACHE_PATH);
     }
 
     /**
-     * Get a value form the store. This must not be an PoolItemInterface.
-     *
-     * @param string $key
-     *
-     * @return string|null
-     * @throws \LogicException
-     * @throws \League\Flysystem\RootViolationException
-     * @throws \League\Flysystem\FileExistsException
-     * @throws \League\Flysystem\FileNotFoundException
-     * @throws \InvalidArgumentException
+     * {@inheritdoc}
      */
     protected function getDirectValue($key) {
         [$isHit, $value] = $this->fetchObjectFromCache($key);
@@ -51,13 +37,11 @@ class HierarchialFilesystemCachePool extends AbstractCachePool implements Hierar
 
     /**
      * @param string $key
-     *
      * @throws \InvalidArgumentException
-     *
      * @return string
      */
-    protected function getFilePath($key) {
-        if (!preg_match('%^[a-zA-Z0-9_\.! |]+$%', $key)) {
+    protected function getFilePath(string $key): string {
+        if (!preg_match('%^[a-zA-Z0-9_.! |]+$%', $key)) {
             throw new \InvalidArgumentException(sprintf('Invalid key "%s". Valid keys must match [a-zA-Z0-9_\.! ].', $key));
         }
         $key = str_replace(HierarchicalPoolInterface::HIERARCHY_SEPARATOR, '/', $key);
@@ -78,9 +62,6 @@ class HierarchialFilesystemCachePool extends AbstractCachePool implements Hierar
 
     /**
      * {@inheritdoc}
-     * @throws \InvalidArgumentException
-     * @throws \League\Flysystem\FileNotFoundException
-     * @throws \League\Flysystem\FileExistsException
      */
     protected function storeItemInCache(PhpCacheItem $item, $ttl) {
         $file = $this->getFilePath($item->getKey());
@@ -93,20 +74,17 @@ class HierarchialFilesystemCachePool extends AbstractCachePool implements Hierar
             $tags = $item->getTags();
         }
 
-        return $this->filesystem->write($file, serialize([
+        $this->filesystem->write($file, serialize([
             $ttl === null ? null : time() + $ttl,
             $item->get(),
             $tags,
         ]));
+        
+        return true;
     }
 
     /**
      * {@inheritdoc}
-     * @throws \InvalidArgumentException
-     * @throws \League\Flysystem\FileNotFoundException
-     * @throws \League\Flysystem\FileExistsException
-     * @throws \League\Flysystem\RootViolationException
-     * @throws \LogicException
      */
     protected function fetchObjectFromCache($key) {
         $file = $this->getFilePath($key);
@@ -130,9 +108,6 @@ class HierarchialFilesystemCachePool extends AbstractCachePool implements Hierar
 
     /**
      * {@inheritdoc}
-     * @throws \League\Flysystem\FileNotFoundException
-     * @throws \InvalidArgumentException
-     * @throws \League\Flysystem\FileExistsException
      */
     protected function getList($name) {
         $file = $this->getFilePath($name);
@@ -146,8 +121,6 @@ class HierarchialFilesystemCachePool extends AbstractCachePool implements Hierar
 
     /**
      * {@inheritdoc}
-     * @throws \League\Flysystem\FileNotFoundException
-     * @throws \InvalidArgumentException
      */
     protected function removeList($name) {
         $file = $this->getFilePath($name);
@@ -156,22 +129,17 @@ class HierarchialFilesystemCachePool extends AbstractCachePool implements Hierar
 
     /**
      * {@inheritdoc}
-     * @throws \League\Flysystem\FileNotFoundException
-     * @throws \InvalidArgumentException
-     * @throws \League\Flysystem\FileExistsException
      */
     protected function appendListItem($name, $key) {
         $list = $this->getList($name);
         $list[] = $key;
 
-        return $this->filesystem->update($this->getFilePath($name), serialize($list));
+        $this->filesystem->write($this->getFilePath($name), serialize($list));
+        return true;
     }
 
     /**
      * {@inheritdoc}
-     * @throws \League\Flysystem\FileNotFoundException
-     * @throws \InvalidArgumentException
-     * @throws \League\Flysystem\FileExistsException
      */
     protected function removeListItem($name, $key) {
         $list = $this->getList($name);
@@ -181,37 +149,27 @@ class HierarchialFilesystemCachePool extends AbstractCachePool implements Hierar
             }
         }
 
-        return $this->filesystem->update($this->getFilePath($name), serialize($list));
+        $this->filesystem->write($this->getFilePath($name), serialize($list));
+        return true;
     }
 
     /**
      * @param $key
      *
      * @return bool
-     * @throws \LogicException
-     * @throws \League\Flysystem\RootViolationException
-     * @throws \InvalidArgumentException
      */
-    protected function forceClear($key) {
-        try {
-            $path = Util::normalizePath($this->getFilePath($key));
-            if ($this->filesystem->get($path)->isDir()) {
-                return $this->filesystem->deleteDir($path);
-            } else {
-                return $this->filesystem->delete($path);
-            }
-        } catch (FileNotFoundException $e) {
-            return true;
+    protected function forceClear(string $key) {
+        $path = $this->getFilePath($key);
+        if ($this->filesystem->directoryExists($path)) {
+            $this->filesystem->deleteDirectory($path);
+        } else {
+            $this->filesystem->delete($path);
         }
+        return true;
     }
 
     /**
      * {@inheritdoc}
-     * @throws \InvalidArgumentException
-     * @throws \League\Flysystem\RootViolationException
-     * @throws \LogicException
-     * @throws \League\Flysystem\FileExistsException
-     * @throws \League\Flysystem\FileNotFoundException
      */
     protected function clearOneObjectFromCache($key) {
         $this->preRemoveItem($key);
@@ -221,24 +179,16 @@ class HierarchialFilesystemCachePool extends AbstractCachePool implements Hierar
 
     /**
      * {@inheritdoc}
-     * @throws \League\Flysystem\RootViolationException
      */
     protected function clearAllObjectsFromCache() {
-        $this->filesystem->deleteDir(self::CACHE_PATH);
-        $this->filesystem->createDir(self::CACHE_PATH);
+        $this->filesystem->deleteDirectory(self::CACHE_PATH);
+        $this->filesystem->createDirectory(self::CACHE_PATH);
 
         return true;
     }
 
     /**
-     * Removes the key form all tag lists.
-     *
-     * @param string $key
-     *
-     * @return $this
-     * @throws \League\Flysystem\FileNotFoundException
-     * @throws \League\Flysystem\FileExistsException
-     * @throws \InvalidArgumentException
+     * {@inheritdoc}
      */
     protected function preRemoveItem($key) {
         try {

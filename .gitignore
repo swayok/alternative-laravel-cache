@@ -4,6 +4,6 @@ composer.lock
 composer.phar
 vendor
 tests/bootstrap/cache
-tests/storage/framework/cache/cache
+tests/storage/framework/cache
 _ide_helper.php
 .phpunit.result.cache

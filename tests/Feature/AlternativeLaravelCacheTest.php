@@ -57,14 +57,25 @@ class AlternativeLaravelCacheTest extends TestCase {
         ]
      */
     
-    /**
-     * @return CacheManager
-     */
-    private function getCache() {
+    private function getCache(): CacheManager {
         return $this->app['cache'];
     }
-
-    public function testNormalCache() {
+    
+    protected function tearDown(): void {
+        parent::tearDown();
+        /** @var AlternativeRedisCacheStore|Repository $redisStore */
+        $redisStore = $this->getCache()->store('redis');
+        /** @var AlternativeFileCacheStore|Repository $fileStore */
+        $fileStore = $this->getCache()->store('file');
+        /** @var AlternativeFileCacheStore|Repository $hierarchialFileStore */
+        $hierarchialFileStore = $this->getCache()->store('hierarchial_file');
+    
+        $redisStore->flush();
+        $fileStore->flush();
+        $hierarchialFileStore->flush();
+    }
+    
+    public function testNormalCache(): void {
         /** @var AlternativeRedisCacheStore|Repository $redisStore */
         $redisStore = $this->getCache()->store('redis');
         /** @var AlternativeFileCacheStore|Repository $fileStore */
@@ -80,7 +91,7 @@ class AlternativeLaravelCacheTest extends TestCase {
         self::assertEquals('value2', $fileStore->get($key));
     }
     
-    public function testMemcachedCache() {
+    public function testMemcachedCache(): void {
         if (class_exists('\Memcached')) {
             /** @var AlternativeMemcachedCacheStore|Repository $memcachedStore */
             $memcachedStore = $this->getCache()
@@ -96,7 +107,7 @@ class AlternativeLaravelCacheTest extends TestCase {
         }
     }
 
-    public function testHierarchialFileCache() {
+    public function testHierarchialFileCache(): void {
         /** @var AlternativeFileCacheStore|Repository $hierarchialFileStore */
         $hierarchialFileStore = $this->getCache()->store('hierarchial_file');
         $hierarchialFileStore->flush();
@@ -115,7 +126,7 @@ class AlternativeLaravelCacheTest extends TestCase {
         self::assertEquals('value3', $hierarchialFileStore->get($key3));
     }
 
-    public function testTaggedCache() {
+    public function testTaggedCache(): void {
         /** @var AlternativeRedisCacheStore|Repository $redisStore */
         $redisStore = $this->getCache()->store('redis');
         /** @var AlternativeFileCacheStore|Repository $fileStore */
@@ -146,18 +157,19 @@ class AlternativeLaravelCacheTest extends TestCase {
         self::assertEquals('value33', $hierarchialFileStore->get($key2));
 
         $redisStore->tags(['tag1'])->flush();
-        $fileStore->tags(['tag1'])->flush();
-        $hierarchialFileStore->tags(['tag1'])->flush();
-
         self::assertEquals('value11', $redisStore->get($key2));
-        self::assertEquals('value22', $fileStore->get($key2));
-        self::assertEquals('value33', $hierarchialFileStore->get($key2));
         self::assertNull($redisStore->get($key1));
+        
+        $fileStore->tags(['tag1'])->flush();
+        self::assertEquals('value22', $fileStore->get($key2));
         self::assertNull($fileStore->get($key1));
+        
+        $hierarchialFileStore->tags(['tag1'])->flush();
+        self::assertEquals('value33', $hierarchialFileStore->get($key2));
         self::assertNull($hierarchialFileStore->get($key1));
     }
     
-    public function testLocks() {
+    public function testLocks(): void {
         /** @var AlternativeRedisCacheStoreWithLocks|Repository $redisStore */
         $redisStore = $this->getCache()->store('redis');
         /** @var AlternativeFileCacheStoreWithLocks|Repository $fileStore */
@@ -193,7 +205,7 @@ class AlternativeLaravelCacheTest extends TestCase {
         $lock->release();
     }
     
-    public function testHierarchialCacheKeys() {
+    public function testHierarchialCacheKeys(): void {
         /** @var AlternativeRedisCacheStoreWithLocks|Repository $redisStore */
         $redisStore = $this->getCache()->store('redis');
         /** @var AlternativeFileCacheStoreWithLocks|Repository $fileStore */
@@ -305,7 +317,7 @@ class AlternativeLaravelCacheTest extends TestCase {
         $hierarchialFileStore->flush();
     }
     
-    public function testMemcachedLocks() {
+    public function testMemcachedLocks(): void {
         if (class_exists('\Memcached')) {
             /** @var AlternativeMemcachedCacheStoreWithLocks|Repository $memcachedStore */
             $memcachedStore = $this->getCache()->store('memcached');
@@ -322,7 +334,7 @@ class AlternativeLaravelCacheTest extends TestCase {
         }
     }
     
-    public function testRedisKeysCreation() {
+    public function testRedisKeysCreation(): void {
         /** @var AlternativeRedisCacheStoreWithLocks|Repository $redisStore */
         $redisStore = $this->getCache()->store('redis');
         $redisStore->flush();

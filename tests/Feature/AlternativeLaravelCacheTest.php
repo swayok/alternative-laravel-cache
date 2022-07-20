@@ -70,7 +70,7 @@ class AlternativeLaravelCacheTest extends TestCase {
         $hierarchialFileStore = $this->getCache()->store('hierarchial_file');
     
         $redisStore->flush();
-//        $fileStore->flush();
+        $fileStore->flush();
         $hierarchialFileStore->flush();
     
         parent::tearDown();

@@ -150,10 +150,18 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider {
         if (!empty($configPermissions)) {
             if (is_array($configPermissions)) {
                 if (isset($configPermissions['file']) && is_int($configPermissions['file'])) {
-                    $permissionsMap['file']['public'] = $permissionsMap['file']['private'] = $configPermissions['file'];
+                    if (!is_array($configPermissions['file'])) {
+                        $permissionsMap['file']['public'] = $permissionsMap['file']['private'] = $configPermissions['file'];
+                    } else {
+                        $permissionsMap['file'] = $configPermissions['file'];
+                    }
                 }
                 if (isset($configPermissions['dir']) && is_int($configPermissions['dir'])) {
-                    $permissionsMap['dir']['public'] = $permissionsMap['dir']['private'] = $configPermissions['dir'];
+                    if (!is_array($configPermissions['dir'])) {
+                        $permissionsMap['dir']['public'] = $permissionsMap['dir']['private'] = $configPermissions['dir'];
+                    } else {
+                        $permissionsMap['dir'] = $configPermissions['dir'];
+                    }
                 }
             } else if (is_int($configPermissions)) {
                 $permissionsMap['file']['public'] = $permissionsMap['file']['private'] = $configPermissions;

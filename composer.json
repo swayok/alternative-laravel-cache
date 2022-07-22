@@ -51,10 +51,10 @@
         "cache/memcached-adapter": "Required to use Memcache-based cache"
     },
     "extra": {
-      "laravel": {
-          "providers": [
-              "AlternativeLaravelCache\\Provider\\AlternativeCacheStoresServiceProvider"
-          ]
-      }
-  }
+        "laravel": {
+            "providers": [
+                "AlternativeLaravelCache\\Provider\\AlternativeCacheStoresServiceProvider"
+            ]
+        }
+    }
 }

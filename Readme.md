@@ -87,7 +87,7 @@ Add to `composer.json`:
 Add to `composer.json`:
 
     "require": {
-        "swayok/cache-filesystem-adapter": "^1.0.0",
+        "swayok/cache-filesystem-adapter": "^1.0.0"
     }
     
 ### Redis support

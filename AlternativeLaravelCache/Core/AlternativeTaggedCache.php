@@ -43,7 +43,7 @@ class AlternativeTaggedCache extends TaggedCache {
      */
     public function put($key, $value, $ttl = null) {
         $this->sendTagsToStore();
-        parent::put($key, $value, $ttl);
+        return parent::put($key, $value, $ttl);
     }
 
     /**
@@ -55,7 +55,7 @@ class AlternativeTaggedCache extends TaggedCache {
      */
     public function putMany(array $values, $ttl = null) {
         $this->sendTagsToStore();
-        parent::putMany($values, $ttl);
+        return parent::putMany($values, $ttl);
     }
 
     /**
@@ -67,7 +67,7 @@ class AlternativeTaggedCache extends TaggedCache {
      */
     public function forever($key, $value) {
         $this->sendTagsToStore();
-        parent::forever($key, $value);
+        return parent::forever($key, $value);
     }
     
     /**

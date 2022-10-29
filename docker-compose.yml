@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+  alternative-laravel-cache-test:
+    container_name: alternative-laravel-cache
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: vendor/bin/phpunit
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+  redis:
+    container_name: alternative-laravel-cache-redis
+    image: redis:7.0
+
+networks:
+  default:
+    name: alternative-laravel-cache-network

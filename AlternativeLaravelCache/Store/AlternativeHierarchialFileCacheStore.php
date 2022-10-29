@@ -32,6 +32,10 @@ class AlternativeHierarchialFileCacheStore extends AlternativeCacheStore {
         }
     }
 
+    public function getHierarchySeparator() {
+       return HierarchicalPoolInterface::HIERARCHY_SEPARATOR;
+    }
+
     public function setPrefix($prefix) {
         // allowed chars: "a-zA-Z0-9_.! "
         parent::setPrefix(preg_replace('%[^a-zA-Z0-9_\.! ]+%', '_', $prefix));

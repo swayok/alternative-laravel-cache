@@ -18,11 +18,6 @@ abstract class AlternativeCacheStore extends TaggableStore {
     protected $db;
 
     /**
-     * @var string
-     */
-    public $hierarchySeparator;
-
-    /**
      * A string that should be prepended to keys.
      *
      * @var string
@@ -107,15 +102,14 @@ abstract class AlternativeCacheStore extends TaggableStore {
         return $this->wrappedConnection;
     }
 
+    /**
+     * Retrieve the hierarchy separator.
+     * Defaults to '_'.
+     * 
+     * @return string 
+     */
     public function getHierarchySeparator() {
-        if ($this->hierarchySeparator) {
-            return $this->hierarchySeparator;
-        }
-        $this->hierarchySeparator = '_';
-        if ($this->getWrappedConnection() instanceof HierarchicalPoolInterface) {
-            $this->hierarchySeparator = HierarchicalPoolInterface::HIERARCHY_SEPARATOR;
-        }
-        return $this->hierarchySeparator;
+        return '_';
     }
 
     /**

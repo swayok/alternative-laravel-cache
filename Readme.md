@@ -132,12 +132,16 @@ Add to `config/app.php`:
     
 ### Supported cache drivers
 
-- `redis` - redis cache with proper tagging
-- `memcached` - memcached cache with proper tagging
-- `file` - file-based cache with proper tagging
-- `hierarchial_file` - hierarchial file-based cache with proper tagging (http://www.php-cache.com/en/latest/hierarchy/).
+- `redis` - redis cache with proper tagging, also supports hierarchical cache keys;  
+- `memcached` - memcached cache with proper tagging, also supports hierarchical cache keys;
+- `file` - simple file-based cache with proper tagging;
+- `hierarchial_file` - hierarchical file-based cache with proper tagging.
 This driver also supports `/` instead of `|` so you can use `/users/:uid/followers/:fid/likes` instead of `|users|:uid|followers|:fid|likes`
 as it better represents path in file system.
+
+### Hierarchical cache keys
+
+Visit http://www.php-cache.com/en/latest/hierarchy/ for details
 
 ### `permissions` configuration parameter for file-based cache drivers (`config/cache.php`)
 
@@ -167,7 +171,7 @@ cache keys that contain `|` will work as hierarchy. Detals here: http://www.php-
     // Put key with colons (treated as usual cache key)
     Cache::put('cache-key:something:something-else', 'value', now()->addHours(6));
     
-    // Put key with pipes (treated as hierarchial cache key)
+    // Put key with pipes (treated as hierarchical cache key)
     Cache::put('cache-key|something|something-else', 'value', now()->addHours(6));
     
     // Get key with colons

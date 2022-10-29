@@ -27,26 +27,30 @@ class AlternativeHierarchialFileCacheStore extends AlternativeCacheStore {
     public function wrapConnection() {
         if (class_exists('League\Flysystem\Adapter\Local')) {
             return new HierarchialFilesystemCachePoolFlysystem1($this->getDb());
-        } else {
-            return new HierarchialFilesystemCachePoolFlysystem3($this->getDb());
         }
+    
+        return new HierarchialFilesystemCachePoolFlysystem3($this->getDb());
     }
 
     public function setPrefix($prefix) {
         // allowed chars: "a-zA-Z0-9_.! "
-        parent::setPrefix(preg_replace('%[^a-zA-Z0-9_\.! ]+%', '_', $prefix));
+        parent::setPrefix(preg_replace('%[^a-zA-Z0-9_.! ]+%', '_', $prefix));
     }
 
     public function fixItemKey($key) {
         // allowed chars: "a-zA-Z0-9_.! |"
-        // note: do not replace pipe "|" or hierarachial cache won't work
+        // note: do not replace pipe "|" or hierarchical cache won't work
         // note: directory separator "/" will be converted to pipe "|" in order to provide
         // more native way of folding like "/folder/subfolder/item/id"
         return parent::fixItemKey(preg_replace(
-            ['%-+%',   '%[/|]+%', '%[^a-zA-Z0-9_\.! |]+%'],
+            ['%-+%',   '%[/|]+%', '%[^a-zA-Z0-9_.! |]+%'],
             ['_dash_', '|', '_'],
             $key
         ));
     }
-
+    
+    public function getHierarchySeparator() {
+        return HierarchicalPoolInterface::HIERARCHY_SEPARATOR;
+    }
+    
 }

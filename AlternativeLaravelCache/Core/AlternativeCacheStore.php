@@ -7,6 +7,7 @@ use Cache\Adapter\Common\CacheItem;
 use Cache\Hierarchy\HierarchicalPoolInterface;
 use Cache\TagInterop\TaggableCacheItemPoolInterface;
 use Illuminate\Cache\TaggableStore;
+use Psr\Cache\InvalidArgumentException;
 
 abstract class AlternativeCacheStore extends TaggableStore {
 
@@ -16,11 +17,6 @@ abstract class AlternativeCacheStore extends TaggableStore {
      * @var mixed
      */
     protected $db;
-
-    /**
-     * @var string
-     */
-    public $hierarchySeparator;
 
     /**
      * A string that should be prepended to keys.
@@ -41,7 +37,7 @@ abstract class AlternativeCacheStore extends TaggableStore {
      *
      * @var AbstractCachePool|HierarchicalPoolInterface|TaggableCacheItemPoolInterface
      */
-    protected $wrappedConnection = null;
+    protected $wrappedConnection;
 
     /**
      * Tags list. Used only for 1 operation (put, putMany, flush, forever)
@@ -52,7 +48,7 @@ abstract class AlternativeCacheStore extends TaggableStore {
 
     /**
      * Autodetected in isDurationInSeconds() depending on Laravel/Lumen version
-     * @var bool
+     * @var bool|null
      */
     private $isDurationInSeconds;
 
@@ -63,7 +59,7 @@ abstract class AlternativeCacheStore extends TaggableStore {
      */
     public function __construct($db, $prefix, $connection = null) {
         $this->db = $db;
-        $this->connection = $connection;
+        $this->setConnection($connection);
         $this->setPrefix($prefix);
     }
 
@@ -106,23 +102,20 @@ abstract class AlternativeCacheStore extends TaggableStore {
         }
         return $this->wrappedConnection;
     }
-
+    
+    /**
+     * @return string
+     */
     public function getHierarchySeparator() {
-        if ($this->hierarchySeparator) {
-            return $this->hierarchySeparator;
-        }
-        $this->hierarchySeparator = '_';
-        if ($this->getWrappedConnection() instanceof HierarchicalPoolInterface) {
-            $this->hierarchySeparator = HierarchicalPoolInterface::HIERARCHY_SEPARATOR;
-        }
-        return $this->hierarchySeparator;
+        return '_';
     }
-
+    
     /**
      * Retrieve an item from the cache by key.
      *
-     * @param  string|array $key
+     * @param string|array $key
      * @return mixed
+     * @throws InvalidArgumentException
      */
     public function get($key) {
         $this->_pullTags();
@@ -151,7 +144,7 @@ abstract class AlternativeCacheStore extends TaggableStore {
      * @param  string $key
      * @param  mixed $value
      * @param  int $duration - seconds for Laravel >= 5.8 or minutes for Laravel <= 5.7
-     * @return void
+     * @return bool
      * @throws \Psr\Cache\InvalidArgumentException
      */
     public function put($key, $value, $duration) {
@@ -163,11 +156,11 @@ abstract class AlternativeCacheStore extends TaggableStore {
      *
      * @param  array $values
      * @param  int $duration - seconds for Laravel >= 5.8 or minutes for Laravel <= 5.7
-     * @return void
+     * @return bool
      */
     public function putMany(array $values, $duration) {
         if (!count($values)) {
-            return;
+            return false;
         }
         $tags = $this->_pullTags();
         foreach ($values as $key => $value) {
@@ -221,7 +214,7 @@ abstract class AlternativeCacheStore extends TaggableStore {
      *
      * @param  string $key
      * @param  mixed $value
-     * @return void
+     * @return bool
      * @throws \Psr\Cache\InvalidArgumentException
      */
     public function forever($key, $value) {
@@ -249,9 +242,10 @@ abstract class AlternativeCacheStore extends TaggableStore {
         $tags = $this->_pullTags();
         if (empty($tags)) {
             return (bool)$this->getWrappedConnection()->clear();
-        } else {
-            return (bool)$this->getWrappedConnection()->clearTags($tags);
         }
+    
+        /** @noinspection PhpUndefinedMethodInspection */
+        return (bool)$this->getWrappedConnection()->clearTags($tags);
     }
 
     /**
@@ -330,7 +324,7 @@ abstract class AlternativeCacheStore extends TaggableStore {
      * @param string $key
      * @param mixed $value
      * @param $tags
-     * @param int $duration
+     * @param int|float|null $duration
      * @return CacheItem
      * @throws \Psr\Cache\InvalidArgumentException
      */
@@ -394,20 +388,20 @@ abstract class AlternativeCacheStore extends TaggableStore {
     /**
      * Begin executing a new tags operation.
      *
-     * @param  array|mixed $names
+     * @param  array|string $names
      * @return AlternativeTaggedCache
-     * @throws \InvalidArgumentException
+     * @throws \Psr\Cache\InvalidArgumentException
      */
     public function tags($names) {
-        if (!empty($names)) {
-            if (is_string($names)) {
-                $names = [$names];
-            }
-            if (!is_array($names)) {
-                throw new \InvalidArgumentException('$names argument should be null, array or string');
-            }
+        if (is_string($names)) {
+            $names = [$names];
         }
-        $tags = new AlternativeTagSet($this, is_array($names) ? $names : func_get_args());
+        if (!is_array($names)) {
+            throw new \Cache\Adapter\Common\Exception\InvalidArgumentException(
+                '$names argument should be array or string'
+            );
+        }
+        $tags = new AlternativeTagSet($this, $names);
         return new AlternativeTaggedCache($this, $this->getPrefix(), $tags);
     }
 

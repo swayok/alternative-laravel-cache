@@ -6,6 +6,7 @@ use AlternativeLaravelCache\Core\AlternativeCacheStore;
 use Cache\Adapter\Common\AbstractCachePool;
 use Cache\Adapter\Predis\PredisCachePool;
 use Cache\Adapter\Redis\RedisCachePool;
+use Cache\Hierarchy\HierarchicalPoolInterface;
 use Illuminate\Redis\RedisManager;
 
 /**
@@ -29,9 +30,9 @@ class AlternativeRedisCacheStore extends AlternativeCacheStore {
         if ($this->isPhpRedis()) {
             // PHPRedis extension client
             return new RedisCachePool($this->getConnection());
-        } else {
-            return new PredisCachePool($this->getConnection());
         }
+    
+        return new PredisCachePool($this->getConnection());
     }
     
     protected function isPhpRedis(): bool {
@@ -53,19 +54,16 @@ class AlternativeRedisCacheStore extends AlternativeCacheStore {
     
     public function setPrefix($prefix) {
         // not allowed chars: "{}()/\@"
-        parent::setPrefix(preg_replace('%[\{\}\(\)\/@:\\\]%', '_', $prefix));
+        parent::setPrefix(preg_replace('%[{}()/@:\\\]%', '_', $prefix));
     }
     
-    /**
-     * Fix original item key to be compatible with cache storeage wrapper.
-     * Used in some stores to fix not allowed chars usage in key name
-     *
-     * @param $key
-     * @return mixed
-     */
     public function fixItemKey($key) {
         // not allowed characters: {}()/\@:
-        return preg_replace('%[\{\}\(\)\/@:\\\]%', '-', parent::fixItemKey($key));
+        return preg_replace('%[{}()/@:\\\]%', '-', parent::fixItemKey($key));
+    }
+    
+    public function getHierarchySeparator() {
+        return HierarchicalPoolInterface::HIERARCHY_SEPARATOR;
     }
     
 }

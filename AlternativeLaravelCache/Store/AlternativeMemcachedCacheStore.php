@@ -5,6 +5,7 @@ namespace AlternativeLaravelCache\Store;
 use AlternativeLaravelCache\Core\AlternativeCacheStore;
 use Cache\Adapter\Common\AbstractCachePool;
 use Cache\Adapter\Memcached\MemcachedCachePool;
+use Cache\Hierarchy\HierarchicalPoolInterface;
 
 /**
  * @method \Memcached getDb()
@@ -29,7 +30,7 @@ class AlternativeMemcachedCacheStore extends AlternativeCacheStore {
     
     public function setPrefix($prefix) {
         // not allowed chars: "{}()/\@"
-        parent::setPrefix(preg_replace('%[\{\}\(\)\/@:\\\]%', '_', $prefix));
+        parent::setPrefix(preg_replace('%[{}()/@:\\\]%', '_', $prefix));
     }
     
     /**
@@ -41,6 +42,10 @@ class AlternativeMemcachedCacheStore extends AlternativeCacheStore {
      */
     public function fixItemKey($key) {
         // not allowed characters: {}()/\@:
-        return preg_replace('%[\{\}\(\)\/@:\\\]%', '-', parent::fixItemKey($key));
+        return preg_replace('%[{}()/@:\\\]%', '-', parent::fixItemKey($key));
+    }
+    
+    public function getHierarchySeparator() {
+        return HierarchicalPoolInterface::HIERARCHY_SEPARATOR;
     }
 }

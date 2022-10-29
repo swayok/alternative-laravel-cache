@@ -47,12 +47,6 @@ abstract class AlternativeCacheStore extends TaggableStore {
     protected $tags;
 
     /**
-     * Autodetected in isDurationInSeconds() depending on Laravel/Lumen version
-     * @var bool|null
-     */
-    private $isDurationInSeconds;
-
-    /**
      * @param mixed $db - something like \Illuminate\Redis\Database
      * @param string $prefix
      * @param string|null $connection - connection name to use (if applicable)
@@ -142,29 +136,30 @@ abstract class AlternativeCacheStore extends TaggableStore {
      * Store an item in the cache for a given number of minutes/seconds.
      *
      * @param  string $key
-     * @param  mixed $value
-     * @param  int $duration - seconds for Laravel >= 5.8 or minutes for Laravel <= 5.7
+     * @param  mixed  $value
+     * @param  \DateTimeInterface|\DateInterval|int|null $ttl - int: seconds
      * @return bool
      * @throws \Psr\Cache\InvalidArgumentException
      */
-    public function put($key, $value, $duration) {
-        return $this->getWrappedConnection()->save($this->newItem($key, $value, $this->_pullTags(), $duration));
+    public function put($key, $value, $ttl) {
+        return $this->getWrappedConnection()->save($this->newItem($key, $value, $this->_pullTags(), $ttl));
     }
 
     /**
      * Store multiple items in the cache for a given number of minutes.
      *
-     * @param  array $values
-     * @param  int $duration - seconds for Laravel >= 5.8 or minutes for Laravel <= 5.7
+     * @param  array $values - ['cache_key' => $cacheValue]
+     * @param  \DateTimeInterface|\DateInterval|int|null $ttl - int: seconds
      * @return bool
+     * @throws \Psr\Cache\InvalidArgumentException
      */
-    public function putMany(array $values, $duration) {
+    public function putMany(array $values, $ttl) {
         if (!count($values)) {
             return false;
         }
         $tags = $this->_pullTags();
         foreach ($values as $key => $value) {
-            $this->getWrappedConnection()->saveDeferred($this->newItem($key, $value, $tags));
+            $this->getWrappedConnection()->saveDeferred($this->newItem($key, $value, $tags, $ttl));
         }
         return $this->getWrappedConnection()->commit();
     }
@@ -174,8 +169,8 @@ abstract class AlternativeCacheStore extends TaggableStore {
      * Note: be careful implementing database native increment - real $key in db may be not
      * the same as $this->itemKey($key)
      *
-     * @param  string  $key
-     * @param  mixed   $value
+     * @param  string $key
+     * @param  int $value
      * @return int|bool
      */
     public function increment($key, $value = 1) {
@@ -194,8 +189,8 @@ abstract class AlternativeCacheStore extends TaggableStore {
      * Note: be careful implementing database native increment - real $key in db may be not
      * the same as $this->itemKey($key)
      *
-     * @param  string  $key
-     * @param  mixed   $value
+     * @param  string $key
+     * @param  int $value
      * @return int|bool
      */
     public function decrement($key, $value = 1) {
@@ -296,44 +291,24 @@ abstract class AlternativeCacheStore extends TaggableStore {
         return $value;
     }
 
-    /**
-     * @return bool
-     */
-    protected function isDurationInSeconds() {
-        if ($this->isDurationInSeconds === null) {
-            $this->isDurationInSeconds = preg_match('%^.*?(\d+\.\d+)%', app()->version(), $matches) && (float)$matches[1] >= 5.8;
-        }
-        return $this->isDurationInSeconds;
-    }
-
-    /**
-     * @return int
-     */
-    protected function getDefaultDuration() {
-        return 525600 * ($this->isDurationInSeconds() ? 60 : 1);
-    }
-
-    /**
-     * @return int
-     */
-    protected function getDurationMultiplier() {
-        return $this->isDurationInSeconds() ? 1 : 60;
+    protected function getDefaultDuration(): int {
+        return 525600;
     }
 
     /**
      * @param string $key
      * @param mixed $value
      * @param $tags
-     * @param int|float|null $duration
+     * @param \DateTimeInterface|\DateInterval|int|null $ttl - int: seconds
      * @return CacheItem
      * @throws \Psr\Cache\InvalidArgumentException
      */
-    protected function newItem($key, $value, $tags = null, $duration = null) {
-        $duration = $duration === null ? $this->getDefaultDuration() : max(1, (int)$duration);
+    protected function newItem($key, $value, $tags = null, $ttl = null) {
+        $ttl = $ttl === null ? $this->getDefaultDuration() : max(1, (int)$ttl);
         $item = $this->getWrappedConnection()->getItem($this->itemKey($key));
         $item
             ->set($this->encodeValue($value))
-            ->expiresAfter($duration * $this->getDurationMultiplier());
+            ->expiresAfter($ttl);
         if (!empty($tags)) {
             $item->setTags($tags);
         }

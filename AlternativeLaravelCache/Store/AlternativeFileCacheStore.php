@@ -28,13 +28,13 @@ class AlternativeFileCacheStore extends AlternativeCacheStore {
 
     public function setPrefix($prefix) {
         // allowed chars: "a-zA-Z0-9_.! "
-        parent::setPrefix(preg_replace('%[^a-zA-Z0-9_\.! ]+%', '_', $prefix));
+        parent::setPrefix(preg_replace('%[^a-zA-Z0-9_.! ]+%', '_', $prefix));
     }
 
     public function fixItemKey($key) {
         // allowed chars: "a-zA-Z0-9_.! "
         return parent::fixItemKey(preg_replace(
-            ['%-+%',   '%\|+%',  '%/+%', '%[^a-zA-Z0-9_\.! ]+%'],
+            ['%-+%',   '%\|+%',  '%/+%', '%[^a-zA-Z0-9_.! ]+%'],
             ['_dash_', '_pipe_', '_ds_', '_'],
             $key
         ));

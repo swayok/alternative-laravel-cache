@@ -24,7 +24,7 @@ class AlternativeTaggedCache extends TaggedCache {
     /**
      * Create a new tagged cache instance.
      *
-     * @param  \Illuminate\Contracts\Cache\Store $store
+     * @param  Store $store
      * @param  string $prefix
      * @param  AlternativeTagSet $tags
      */
@@ -38,8 +38,8 @@ class AlternativeTaggedCache extends TaggedCache {
      *
      * @param  string $key
      * @param  mixed $value
-     * @param  \DateTime|int $ttl - seconds for Laravel >= 5.8 or minutes for Laravel <= 5.7
-     * @return void
+     * @param  \DateTimeInterface|\DateInterval|int|null $ttl - int: seconds
+     * @return bool
      */
     public function put($key, $value, $ttl = null) {
         $this->sendTagsToStore();
@@ -51,7 +51,7 @@ class AlternativeTaggedCache extends TaggedCache {
      *
      * @param  array $values
      * @param  int $ttl  - seconds for Laravel >= 5.8 or minutes for Laravel <= 5.7
-     * @return void
+     * @return bool
      */
     public function putMany(array $values, $ttl = null) {
         $this->sendTagsToStore();
@@ -63,7 +63,7 @@ class AlternativeTaggedCache extends TaggedCache {
      *
      * @param  string $key
      * @param  mixed $value
-     * @return void
+     * @return bool
      */
     public function forever($key, $value) {
         $this->sendTagsToStore();
@@ -73,15 +73,10 @@ class AlternativeTaggedCache extends TaggedCache {
     /**
      * @return AlternativeCacheStore
      */
-    public function getStore() {
-        return $this->store;
-    }
-
-    /**
-     * @return AlternativeCacheStore
-     */
     protected function sendTagsToStore(): AlternativeCacheStore {
-        return $this->getStore()->_setTagsForNextOperation($this->tags->getKeys());
+        /** @var AlternativeCacheStore $store */
+        $store = $this->getStore();
+        return $store->_setTagsForNextOperation($this->tags->getKeys());
     }
 
     /**

@@ -20,7 +20,7 @@ class HierarchialFilesystemCachePoolFlysystem3 extends AbstractCachePool impleme
     /**
      * @type Filesystem
      */
-    protected Filesystem $filesystem;
+    protected $filesystem;
 
     public function __construct(Filesystem $filesystem) {
         $this->filesystem = $filesystem;

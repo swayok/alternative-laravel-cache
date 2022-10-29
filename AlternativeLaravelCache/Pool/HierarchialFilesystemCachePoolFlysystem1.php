@@ -1,4 +1,7 @@
 <?php
+/** @noinspection PhpFullyQualifiedNameUsageInspection */
+/** @noinspection PhpUndefinedMethodInspection */
+/** @noinspection PhpUndefinedClassInspection */
 
 namespace AlternativeLaravelCache\Pool;
 
@@ -57,7 +60,7 @@ class HierarchialFilesystemCachePoolFlysystem1 extends AbstractCachePool impleme
      * @return string
      */
     protected function getFilePath($key) {
-        if (!preg_match('%^[a-zA-Z0-9_\.! |]+$%', $key)) {
+        if (!preg_match('%^[a-zA-Z0-9_.! |]+$%', $key)) {
             throw new \InvalidArgumentException(sprintf('Invalid key "%s". Valid keys must match [a-zA-Z0-9_\.! ].', $key));
         }
         $key = str_replace(HierarchicalPoolInterface::HIERARCHY_SEPARATOR, '/', $key);
@@ -92,7 +95,8 @@ class HierarchialFilesystemCachePoolFlysystem1 extends AbstractCachePool impleme
         if ($item instanceof TaggableCacheItemInterface) {
             $tags = $item->getTags();
         }
-        
+    
+        /** @noinspection PhpVoidFunctionResultUsedInspection */
         return $this->filesystem->write($file, serialize([
             $ttl === null ? null : time() + $ttl,
             $item->get(),
@@ -197,9 +201,10 @@ class HierarchialFilesystemCachePoolFlysystem1 extends AbstractCachePool impleme
             $path = Util::normalizePath($this->getFilePath($key));
             if ($this->filesystem->get($path)->isDir()) {
                 return $this->filesystem->deleteDir($path);
-            } else {
-                return $this->filesystem->delete($path);
             }
+    
+            /** @noinspection PhpVoidFunctionResultUsedInspection */
+            return $this->filesystem->delete($path);
         } catch (FileNotFoundException $e) {
             return true;
         }

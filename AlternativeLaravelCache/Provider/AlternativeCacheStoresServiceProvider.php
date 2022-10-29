@@ -18,12 +18,12 @@ use League\Flysystem\Filesystem;
 
 class AlternativeCacheStoresServiceProvider extends ServiceProvider {
 
-    static protected string $redisDriverName = 'redis';
-    static protected string $memcacheDriverName = 'memcached';
-    static protected string $fileDriverName = 'file';
-    static protected string $hierarchialFileDriverName = 'hierarchial_file';
+    static protected $redisDriverName = 'redis';
+    static protected $memcacheDriverName = 'memcached';
+    static protected $fileDriverName = 'file';
+    static protected $hierarchialFileDriverName = 'hierarchial_file';
     
-    static protected array $defaultPermissions = [
+    static protected $defaultPermissions = [
         'file' => [
             'public' => 0644,
             'private' => 0644
@@ -124,7 +124,8 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider {
             return $cacheManager->repository($store);
         });
     }
-
+    
+    /** @noinspection PhpFullyQualifiedNameUsageInspection */
     public static function makeFileCacheAdapter(array $cacheConfig) {
         switch (strtolower($cacheConfig['driver'])) {
             case static::$fileDriverName:
@@ -137,14 +138,14 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider {
                         \League\Flysystem\Adapter\Local::DISALLOW_LINKS,
                         $permissions
                     );
-                } else {
-                    return new \League\Flysystem\Local\LocalFilesystemAdapter(
-                        $cacheConfig['path'],
-                        \League\Flysystem\UnixVisibility\PortableVisibilityConverter::fromArray($permissions, \League\Flysystem\Visibility::PUBLIC),
-                        LOCK_EX,
-                        \League\Flysystem\Local\LocalFilesystemAdapter::DISALLOW_LINKS,
-                    );
                 }
+    
+                return new \League\Flysystem\Local\LocalFilesystemAdapter(
+                    $cacheConfig['path'],
+                    \League\Flysystem\UnixVisibility\PortableVisibilityConverter::fromArray($permissions, \League\Flysystem\Visibility::PUBLIC),
+                    LOCK_EX,
+                    \League\Flysystem\Local\LocalFilesystemAdapter::DISALLOW_LINKS
+                );
             default:
                 throw new InvalidArgumentException("File cache driver [{$cacheConfig['driver']}] is not supported.
                     You can add support for drivers by overwriting " . __CLASS__ . '->makeFileCacheAdapter() method');

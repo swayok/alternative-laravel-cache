@@ -62,7 +62,7 @@ For example:
 3. Some user updates his data and this action invalidates all cache entries related to this user and `users` table.
 4. You need to remove all cache entries related to `users` (1 and 2) and you can do this just like this: `Cache::tags(['users'])->flush();`.
 
-This way all cache entries created in 1 and 2 will be removed. Also you won't need to know tags to access any cache entry by its key.
+This way all cache entries created in 1 and 2 will be removed. And you won't need to know tags to access any cache entry by its key.
 
 ## How to use it:
 
@@ -139,33 +139,8 @@ Add to `config/app.php`:
 This driver also supports `/` instead of `|` so you can use `/users/:uid/followers/:fid/likes` instead of `|users|:uid|followers|:fid|likes`
 as it better represents path in file system.
 
-### Hierarchical cache keys
-
-Visit http://www.php-cache.com/en/latest/hierarchy/ for details
-
-### `permissions` configuration parameter for file-based cache drivers (`config/cache.php`)
-
-    'stores' => [
-        'file' => [
-            'driver' => 'file',
-            'path' => storage_path('framework/cache/data'),
-            'permissions' => [
-                'file' => [
-                    'public' => 0644,
-                ],
-                'dir' => [
-                    'public' => 0755,
-                ],
-            ]
-        ],
-    ],
-    
-These permissions passed to `vendor/league/flysystem/src/Adapter/Local.php` 
-and merged with default permissions. There are 2 types: `public` and `private`
-but only `public` permissions will be used in `AlternativeLaravelCache`.
-
-## Pipe character `|` in cache key
-Pipe character `|` for `redis` and `hierarchial_file` drivers works as hierarchy separator. This means that 
+## Pipe character `|` in cache key (hierarchical cache keys)
+Pipe character `|` for `redis`, `memcached` and `hierarchial_file` drivers works as hierarchy separator. This means that 
 cache keys that contain `|` will work as hierarchy. Detals here: http://www.php-cache.com/en/latest/hierarchy/
 
     // Put key with colons (treated as usual cache key)
@@ -196,7 +171,28 @@ cache keys that contain `|` will work as hierarchy. Detals here: http://www.php-
 ## Slash character `/` in cache key
 Slash character `/` for `hierarchial_file` driver works as hierarchy separator like pipe character `|`.
 This was added to mimic folder structure.
-    
+
+### `permissions` configuration parameter for file-based cache drivers (`config/cache.php`)
+
+    'stores' => [
+        'file' => [
+            'driver' => 'file',
+            'path' => storage_path('framework/cache/data'),
+            'permissions' => [
+                'file' => [
+                    'public' => 0644,
+                ],
+                'dir' => [
+                    'public' => 0755,
+                ],
+            ]
+        ],
+    ],
+
+These permissions passed to `vendor/league/flysystem/src/Adapter/Local.php`
+and merged with default permissions. There are 2 types: `public` and `private`
+but only `public` permissions will be used in `AlternativeLaravelCache`.
+
 ## Notes
 By default, service provider will replace Laravel's `redis` and `file` cache stores. 
 You can alter this behavior like this:

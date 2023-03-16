@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace AlternativeLaravelCache\Store;
 
 use AlternativeLaravelCache\Core\AlternativeCacheStore;
@@ -10,42 +12,39 @@ use Cache\Hierarchy\HierarchicalPoolInterface;
 /**
  * @method \Memcached getDb()
  */
-class AlternativeMemcachedCacheStore extends AlternativeCacheStore {
-    
+class AlternativeMemcachedCacheStore extends AlternativeCacheStore
+{
     /**
      * The Memcached database connection.
      *
      * @var \Memcached
      */
     protected $db;
-    
+
     /**
-     * Wrap Redis connection with MemcachedCachePool
+     * Wrap connection with MemcachedCachePool
      *
      * @return MemcachedCachePool|AbstractCachePool
      */
-    public function wrapConnection() {
+    public function wrapConnection()
+    {
         return new MemcachedCachePool($this->getDb());
     }
-    
-    public function setPrefix($prefix) {
+
+    public function setPrefix(string $prefix): void
+    {
         // not allowed chars: "{}()/\@"
         parent::setPrefix(preg_replace('%[{}()/@:\\\]%', '_', $prefix));
     }
-    
-    /**
-     * Fix original item key to be compatible with cache storeage wrapper.
-     * Used in some stores to fix not allowed chars usage in key name
-     *
-     * @param $key
-     * @return mixed
-     */
-    public function fixItemKey($key) {
+
+    public function fixItemKey(string $key): string
+    {
         // not allowed characters: {}()/\@:
         return preg_replace('%[{}()/@:\\\]%', '-', parent::fixItemKey($key));
     }
-    
-    public function getHierarchySeparator() {
+
+    public function getHierarchySeparator(): string
+    {
         return HierarchicalPoolInterface::HIERARCHY_SEPARATOR;
     }
 }

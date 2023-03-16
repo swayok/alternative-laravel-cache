@@ -1,16 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace AlternativeLaravelCache\Core;
 
 use Cache\Adapter\Common\AbstractCachePool;
 use Cache\Adapter\Common\CacheItem;
+use Cache\Adapter\Common\PhpCacheItem;
 use Cache\Hierarchy\HierarchicalPoolInterface;
 use Cache\TagInterop\TaggableCacheItemPoolInterface;
 use Illuminate\Cache\TaggableStore;
-use Psr\Cache\InvalidArgumentException;
+use Illuminate\Cache\TaggedCache;
 
-abstract class AlternativeCacheStore extends TaggableStore {
-
+abstract class AlternativeCacheStore extends TaggableStore
+{
     /**
      * The database connection.
      *
@@ -47,11 +50,12 @@ abstract class AlternativeCacheStore extends TaggableStore {
     protected $tags;
 
     /**
-     * @param mixed $db - something like \Illuminate\Redis\Database
-     * @param string $prefix
+     * @param mixed       $db - something like \Illuminate\Redis\Database
+     * @param string      $prefix
      * @param string|null $connection - connection name to use (if applicable)
      */
-    public function __construct($db, $prefix, $connection = null) {
+    public function __construct($db, $prefix, $connection = null)
+    {
         $this->db = $db;
         $this->setConnection($connection);
         $this->setPrefix($prefix);
@@ -62,17 +66,16 @@ abstract class AlternativeCacheStore extends TaggableStore {
      *
      * @return mixed
      */
-    public function getDb() {
+    public function getDb()
+    {
         return $this->db;
     }
 
     /**
      * Set the connection name to be used.
-     *
-     * @param  string $connection
-     * @return void
      */
-    public function setConnection($connection) {
+    public function setConnection(?string $connection): void
+    {
         $this->connection = $connection;
         $this->wrappedConnection = null;
     }
@@ -90,28 +93,28 @@ abstract class AlternativeCacheStore extends TaggableStore {
      *
      * @return AbstractCachePool|HierarchicalPoolInterface|TaggableCacheItemPoolInterface
      */
-    public function getWrappedConnection() {
+    public function getWrappedConnection()
+    {
         if ($this->wrappedConnection === null) {
             $this->wrappedConnection = $this->wrapConnection();
         }
         return $this->wrappedConnection;
     }
-    
-    /**
-     * @return string
-     */
-    public function getHierarchySeparator() {
+
+    public function getHierarchySeparator(): string
+    {
         return '_';
     }
-    
+
     /**
      * Retrieve an item from the cache by key.
      *
      * @param string|array $key
      * @return mixed
-     * @throws InvalidArgumentException
+     * @throws \Psr\Cache\InvalidArgumentException
      */
-    public function get($key) {
+    public function get($key)
+    {
         $this->_pullTags();
         $item = $this->getWrappedConnection()->getItem($this->itemKey($key));
         return $this->decodeItem($item);
@@ -122,11 +125,12 @@ abstract class AlternativeCacheStore extends TaggableStore {
      *
      * Items not found in the cache will have a null value.
      *
-     * @param  array $keys
+     * @param array $keys
      * @return array
      * @throws \Psr\Cache\InvalidArgumentException
      */
-    public function many(array $keys) {
+    public function many(array $keys)
+    {
         $this->_pullTags();
         $items = $this->getWrappedConnection()->getItems(array_map([$this, 'itemKey'], $keys));
         return array_map([$this, 'decodeItem'], $items);
@@ -135,25 +139,27 @@ abstract class AlternativeCacheStore extends TaggableStore {
     /**
      * Store an item in the cache for a given number of minutes/seconds.
      *
-     * @param  string $key
-     * @param  mixed  $value
-     * @param  \DateTimeInterface|\DateInterval|int|null $ttl - int: seconds
+     * @param string                                    $key
+     * @param mixed                                     $value
+     * @param \DateTimeInterface|\DateInterval|int|null $ttl - int: seconds
      * @return bool
      * @throws \Psr\Cache\InvalidArgumentException
      */
-    public function put($key, $value, $ttl) {
+    public function put($key, $value, $ttl)
+    {
         return $this->getWrappedConnection()->save($this->newItem($key, $value, $this->_pullTags(), $ttl));
     }
 
     /**
      * Store multiple items in the cache for a given number of minutes.
      *
-     * @param  array $values - ['cache_key' => $cacheValue]
-     * @param  \DateTimeInterface|\DateInterval|int|null $ttl - int: seconds
+     * @param array                                     $values - ['cache_key' => $cacheValue]
+     * @param \DateTimeInterface|\DateInterval|int|null $ttl - int: seconds
      * @return bool
      * @throws \Psr\Cache\InvalidArgumentException
      */
-    public function putMany(array $values, $ttl) {
+    public function putMany(array $values, $ttl)
+    {
         if (!count($values)) {
             return false;
         }
@@ -169,15 +175,16 @@ abstract class AlternativeCacheStore extends TaggableStore {
      * Note: be careful implementing database native increment - real $key in db may be not
      * the same as $this->itemKey($key)
      *
-     * @param  string $key
-     * @param  int $value
+     * @param string $key
+     * @param int    $value
      * @return int|bool
      */
-    public function increment($key, $value = 1) {
+    public function increment($key, $value = 1)
+    {
         $this->_pullTags();
         $item = $this->getWrappedConnection()->getItem($this->itemKey($key));
         if ($item->isHit()) {
-            $item->set((int) $item->get() + (int) $value);
+            $item->set((int)$item->get() + (int)$value);
             $this->getWrappedConnection()->save($item);
             return $item->get();
         }
@@ -189,15 +196,16 @@ abstract class AlternativeCacheStore extends TaggableStore {
      * Note: be careful implementing database native increment - real $key in db may be not
      * the same as $this->itemKey($key)
      *
-     * @param  string $key
-     * @param  int $value
+     * @param string $key
+     * @param int    $value
      * @return int|bool
      */
-    public function decrement($key, $value = 1) {
+    public function decrement($key, $value = 1)
+    {
         $this->_pullTags();
         $item = $this->getWrappedConnection()->getItem($this->itemKey($key));
         if ($item->isHit()) {
-            $item->set((int) $item->get() - (int) $value);
+            $item->set((int)$item->get() - (int)$value);
             $this->getWrappedConnection()->save($item);
             return $item->get();
         }
@@ -207,23 +215,25 @@ abstract class AlternativeCacheStore extends TaggableStore {
     /**
      * Store an item in the cache indefinitely.
      *
-     * @param  string $key
-     * @param  mixed $value
+     * @param string $key
+     * @param mixed  $value
      * @return bool
      * @throws \Psr\Cache\InvalidArgumentException
      */
-    public function forever($key, $value) {
+    public function forever($key, $value)
+    {
         return $this->getWrappedConnection()->save($this->newItem($key, $value, $this->_pullTags()));
     }
 
     /**
      * Remove an item from the cache.
      *
-     * @param  string $key
+     * @param string $key
      * @return bool
      * @throws \Psr\Cache\InvalidArgumentException
      */
-    public function forget($key) {
+    public function forget($key)
+    {
         $this->_pullTags();
         return (bool)$this->getWrappedConnection()->deleteItem($this->itemKey($key));
     }
@@ -233,50 +243,47 @@ abstract class AlternativeCacheStore extends TaggableStore {
      *
      * @return bool
      */
-    public function flush() {
+    public function flush()
+    {
         $tags = $this->_pullTags();
         if (empty($tags)) {
             return (bool)$this->getWrappedConnection()->clear();
         }
-    
+
         /** @noinspection PhpUndefinedMethodInspection */
         return (bool)$this->getWrappedConnection()->clearTags($tags);
     }
 
     /**
      * Remove all items from the cache.
-     *
-     * @return bool
      */
-    public function clear() {
+    public function clear(): bool
+    {
         return $this->flush();
     }
 
     /**
      * Set the cache key prefix.
-     *
-     * @param  string $prefix
-     * @return void
      */
-    public function setPrefix($prefix) {
+    public function setPrefix(string $prefix): void
+    {
         $separator = $this->getHierarchySeparator();
         $this->prefix = $separator . (!empty($prefix) ? $prefix . $separator : '');
     }
 
     /**
      * Get the cache key prefix.
-     *
-     * @return string
      */
-    public function getPrefix() {
+    public function getPrefix(): string
+    {
         return $this->prefix;
     }
 
     /**
-     * @param CacheItem $item
      * @return mixed
      */
-    protected function decodeItem($item) {
+    protected function decodeItem(PhpCacheItem $item)
+    {
         if ($item->isHit()) {
             return $item->get();
         }
@@ -287,23 +294,26 @@ abstract class AlternativeCacheStore extends TaggableStore {
      * @param mixed $value
      * @return int|string
      */
-    protected function encodeValue($value) {
+    protected function encodeValue($value)
+    {
         return $value;
     }
 
-    protected function getDefaultDuration(): int {
+    protected function getDefaultDuration(): int
+    {
         return 525600;
     }
 
     /**
-     * @param string $key
-     * @param mixed $value
-     * @param $tags
+     * @param string                                    $key
+     * @param mixed                                     $value
+     * @param array|null                                $tags
      * @param \DateTimeInterface|\DateInterval|int|null $ttl - int: seconds
      * @return CacheItem
      * @throws \Psr\Cache\InvalidArgumentException
      */
-    protected function newItem($key, $value, $tags = null, $ttl = null) {
+    protected function newItem(string $key, $value, ?array $tags = null, $ttl = null)
+    {
         $ttl = $ttl === null ? $this->getDefaultDuration() : max(1, (int)$ttl);
         $item = $this->getWrappedConnection()->getItem($this->itemKey($key));
         $item
@@ -317,22 +327,18 @@ abstract class AlternativeCacheStore extends TaggableStore {
 
     /**
      * Convert user-friendly key to a real key in storage
-     *
-     * @param $key
-     * @return string
      */
-    public function itemKey($key) {
+    public function itemKey(string $key): string
+    {
         return $this->prefix . $this->fixItemKey($key);
     }
 
     /**
      * Fix original item key to be compatible with cache storeage wrapper.
      * Used in some stores to fix not allowed chars usage in key name
-     *
-     * @param $key
-     * @return mixed
      */
-    public function fixItemKey($key) {
+    public function fixItemKey(string $key): string
+    {
         return ltrim($key, $this->getHierarchySeparator());
     }
 
@@ -340,18 +346,16 @@ abstract class AlternativeCacheStore extends TaggableStore {
      * Set tags list for a single operation.
      * Note: any get/save/delete operation will reset tags list even it is not using them
      *
-     * @param array $tags
      * @return $this
      */
-    public function _setTagsForNextOperation(array $tags) {
+    public function _setTagsForNextOperation(array $tags)
+    {
         $this->tags = $tags;
         return $this;
     }
 
-    /**
-     * @return null|array
-     */
-    public function _pullTags() {
+    public function _pullTags(): ?array
+    {
         if ($this->tags !== null) {
             $tags = $this->tags;
             $this->tags = null;
@@ -363,11 +367,12 @@ abstract class AlternativeCacheStore extends TaggableStore {
     /**
      * Begin executing a new tags operation.
      *
-     * @param  array|string $names
-     * @return AlternativeTaggedCache
+     * @param array|string $names
+     * @return AlternativeTaggedCache|TaggedCache
      * @throws \Psr\Cache\InvalidArgumentException
      */
-    public function tags($names) {
+    public function tags($names)
+    {
         if (is_string($names)) {
             $names = [$names];
         }
@@ -379,5 +384,4 @@ abstract class AlternativeCacheStore extends TaggableStore {
         $tags = new AlternativeTagSet($this, $names);
         return new AlternativeTaggedCache($this, $this->getPrefix(), $tags);
     }
-
 }

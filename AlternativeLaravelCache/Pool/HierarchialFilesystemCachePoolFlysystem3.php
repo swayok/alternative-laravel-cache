@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace AlternativeLaravelCache\Pool;
 
 use Cache\Adapter\Common\AbstractCachePool;
@@ -11,18 +13,19 @@ use Cache\TagInterop\TaggableCacheItemInterface;
 use League\Flysystem\Filesystem;
 use Psr\Cache\CacheItemInterface;
 
-class HierarchialFilesystemCachePoolFlysystem3 extends AbstractCachePool implements HierarchicalPoolInterface {
+class HierarchialFilesystemCachePoolFlysystem3 extends AbstractCachePool implements HierarchicalPoolInterface
+{
+    use HierarchicalCachePoolTrait;
 
     public const CACHE_PATH = 'cache';
-
-    use HierarchicalCachePoolTrait;
 
     /**
      * @type Filesystem
      */
     protected $filesystem;
 
-    public function __construct(Filesystem $filesystem) {
+    public function __construct(Filesystem $filesystem)
+    {
         $this->filesystem = $filesystem;
         $this->filesystem->createDirectory(self::CACHE_PATH);
     }
@@ -30,17 +33,19 @@ class HierarchialFilesystemCachePoolFlysystem3 extends AbstractCachePool impleme
     /**
      * {@inheritdoc}
      */
-    protected function getDirectValue($key) {
+    protected function getDirectValue($key)
+    {
         [$isHit, $value] = $this->fetchObjectFromCache($key);
         return $isHit ? $value : null;
     }
 
     /**
      * @param string $key
-     * @throws \InvalidArgumentException
      * @return string
+     * @throws \InvalidArgumentException
      */
-    protected function getFilePath(string $key): string {
+    protected function getFilePath(string $key): string
+    {
         if (!preg_match('%^[a-zA-Z0-9_.! |]+$%', $key)) {
             throw new \InvalidArgumentException(sprintf('Invalid key "%s". Valid keys must match [a-zA-Z0-9_\.! ].', $key));
         }
@@ -52,41 +57,41 @@ class HierarchialFilesystemCachePoolFlysystem3 extends AbstractCachePool impleme
     /**
      * {@inheritdoc}
      */
-    public function save(CacheItemInterface $item) {
-        if ($item instanceof TaggableCacheItemInterface) {
-            $this->saveTags($item);
-        }
-
+    public function save(CacheItemInterface $item)
+    {
+        $this->saveTags($item);
         return parent::save($item);
     }
 
     /**
      * {@inheritdoc}
      */
-    protected function storeItemInCache(PhpCacheItem $item, $ttl) {
+    protected function storeItemInCache(PhpCacheItem $item, $ttl)
+    {
         $file = $this->getFilePath($item->getKey());
         if ($this->filesystem->has($file)) {
             $this->filesystem->delete($file);
         }
 
-        $tags = [];
-        if ($item instanceof TaggableCacheItemInterface) {
-            $tags = $item->getTags();
-        }
+        $tags = $item->getTags();
 
-        $this->filesystem->write($file, serialize([
-            $ttl === null ? null : time() + $ttl,
-            $item->get(),
-            $tags,
-        ]));
-        
+        $this->filesystem->write(
+            $file,
+            serialize([
+                $ttl === null ? null : time() + $ttl,
+                $item->get(),
+                $tags,
+            ])
+        );
+
         return true;
     }
 
     /**
      * {@inheritdoc}
      */
-    protected function fetchObjectFromCache($key) {
+    protected function fetchObjectFromCache($key)
+    {
         $file = $this->getFilePath($key);
         if (!$this->filesystem->has($file)) {
             return [false, null, []];
@@ -109,7 +114,8 @@ class HierarchialFilesystemCachePoolFlysystem3 extends AbstractCachePool impleme
     /**
      * {@inheritdoc}
      */
-    protected function getList($name) {
+    protected function getList($name)
+    {
         $file = $this->getFilePath($name);
 
         if (!$this->filesystem->has($file)) {
@@ -122,7 +128,8 @@ class HierarchialFilesystemCachePoolFlysystem3 extends AbstractCachePool impleme
     /**
      * {@inheritdoc}
      */
-    protected function removeList($name) {
+    protected function removeList($name)
+    {
         $file = $this->getFilePath($name);
         $this->filesystem->delete($file);
     }
@@ -130,7 +137,8 @@ class HierarchialFilesystemCachePoolFlysystem3 extends AbstractCachePool impleme
     /**
      * {@inheritdoc}
      */
-    protected function appendListItem($name, $key) {
+    protected function appendListItem($name, $key)
+    {
         $list = $this->getList($name);
         $list[] = $key;
 
@@ -141,7 +149,8 @@ class HierarchialFilesystemCachePoolFlysystem3 extends AbstractCachePool impleme
     /**
      * {@inheritdoc}
      */
-    protected function removeListItem($name, $key) {
+    protected function removeListItem($name, $key)
+    {
         $list = $this->getList($name);
         foreach ($list as $i => $item) {
             if ($item === $key) {
@@ -153,12 +162,8 @@ class HierarchialFilesystemCachePoolFlysystem3 extends AbstractCachePool impleme
         return true;
     }
 
-    /**
-     * @param $key
-     *
-     * @return bool
-     */
-    protected function forceClear(string $key) {
+    protected function forceClear(string $key): bool
+    {
         $path = $this->getFilePath($key);
         if ($this->filesystem->directoryExists($path)) {
             $this->filesystem->deleteDirectory($path);
@@ -171,7 +176,8 @@ class HierarchialFilesystemCachePoolFlysystem3 extends AbstractCachePool impleme
     /**
      * {@inheritdoc}
      */
-    protected function clearOneObjectFromCache($key) {
+    protected function clearOneObjectFromCache($key)
+    {
         $this->preRemoveItem($key);
 
         return $this->forceClear($key);
@@ -180,7 +186,8 @@ class HierarchialFilesystemCachePoolFlysystem3 extends AbstractCachePool impleme
     /**
      * {@inheritdoc}
      */
-    protected function clearAllObjectsFromCache() {
+    protected function clearAllObjectsFromCache()
+    {
         $this->filesystem->deleteDirectory(self::CACHE_PATH);
         $this->filesystem->createDirectory(self::CACHE_PATH);
 
@@ -190,7 +197,8 @@ class HierarchialFilesystemCachePoolFlysystem3 extends AbstractCachePool impleme
     /**
      * {@inheritdoc}
      */
-    protected function preRemoveItem($key) {
+    protected function preRemoveItem($key)
+    {
         try {
             $tags = $this->getItem($key)->getTags();
         } catch (CachePoolException $exc) {

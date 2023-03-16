@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace AlternativeLaravelCache\Store;
 
 use AlternativeLaravelCache\Core\AlternativeCacheStore;
@@ -26,12 +28,12 @@ class AlternativeFileCacheStore extends AlternativeCacheStore {
         return new FilesystemCachePool($this->getDb());
     }
 
-    public function setPrefix($prefix) {
+    public function setPrefix(string $prefix): void {
         // allowed chars: "a-zA-Z0-9_.! "
         parent::setPrefix(preg_replace('%[^a-zA-Z0-9_.! ]+%', '_', $prefix));
     }
 
-    public function fixItemKey($key) {
+    public function fixItemKey(string $key): string {
         // allowed chars: "a-zA-Z0-9_.! "
         return parent::fixItemKey(preg_replace(
             ['%-+%',   '%\|+%',  '%/+%', '%[^a-zA-Z0-9_.! ]+%'],

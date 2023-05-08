@@ -48,7 +48,7 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider
     {
         $cacheManager = $this->app->make('cache');
         $hasLocks = trait_exists('\Illuminate\Cache\HasCacheLock');
-        if ($this->isRedisDriverEnabled()) {
+        if ($this->isRedisDriverEnabled() || $this->isPredisDriverEnabled()) {
             $this->addRedisCacheDriver($cacheManager, $hasLocks);
         }
         if ($this->isMemcachedDriverEnabled()) {
@@ -215,6 +215,12 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider
     {
         /** @noinspection ClassConstantCanBeUsedInspection */
         return class_exists('\Cache\Adapter\Redis\RedisCachePool');
+    }
+
+    protected function isPredisDriverEnabled(): bool
+    {
+        /** @noinspection ClassConstantCanBeUsedInspection */
+        return class_exists('\Cache\Adapter\Predis\PredisCachePool');
     }
 
     protected function isMemcachedDriverEnabled(): bool

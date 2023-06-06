@@ -66,6 +66,14 @@ This way all cache entries created in 1 and 2 will be removed. And you won't nee
 
 ## How to use it:
 
+### For Laravel 10+
+
+Add to `composer.json`:
+
+    "require": {
+        "swayok/alternative-laravel-cache": "6.1.*"
+    }
+    
 ### For Laravel 5.4+
 
 Add to `composer.json`:

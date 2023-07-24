@@ -50,8 +50,8 @@ abstract class AlternativeCacheStore extends TaggableStore
     protected $tags;
 
     /**
-     * @param mixed       $db - something like \Illuminate\Redis\Database
-     * @param string      $prefix
+     * @param mixed $db - something like \Illuminate\Redis\Database
+     * @param string $prefix
      * @param string|null $connection - connection name to use (if applicable)
      */
     public function __construct($db, $prefix, $connection = null)
@@ -110,11 +110,15 @@ abstract class AlternativeCacheStore extends TaggableStore
      * Retrieve an item from the cache by key.
      *
      * @param string|array $key
+     *
      * @return mixed
      * @throws \Psr\Cache\InvalidArgumentException
      */
     public function get($key)
     {
+        if (is_array($key)) {
+            return $this->many($key);
+        }
         $this->_pullTags();
         $item = $this->getWrappedConnection()->getItem($this->itemKey($key));
         return $this->decodeItem($item);
@@ -126,6 +130,7 @@ abstract class AlternativeCacheStore extends TaggableStore
      * Items not found in the cache will have a null value.
      *
      * @param array $keys
+     *
      * @return array
      * @throws \Psr\Cache\InvalidArgumentException
      */
@@ -139,22 +144,26 @@ abstract class AlternativeCacheStore extends TaggableStore
     /**
      * Store an item in the cache for a given number of minutes/seconds.
      *
-     * @param string                                    $key
-     * @param mixed                                     $value
+     * @param string|\Stringable $key
+     * @param mixed $value
      * @param \DateTimeInterface|\DateInterval|int|null $ttl - int: seconds
+     *
      * @return bool
      * @throws \Psr\Cache\InvalidArgumentException
      */
     public function put($key, $value, $ttl)
     {
-        return $this->getWrappedConnection()->save($this->newItem($key, $value, $this->_pullTags(), $ttl));
+        return $this->getWrappedConnection()->save(
+            $this->newItem($key, $value, $this->_pullTags(), $ttl)
+        );
     }
 
     /**
      * Store multiple items in the cache for a given number of minutes.
      *
-     * @param array                                     $values - ['cache_key' => $cacheValue]
+     * @param array $values - ['cache_key' => $cacheValue]
      * @param \DateTimeInterface|\DateInterval|int|null $ttl - int: seconds
+     *
      * @return bool
      * @throws \Psr\Cache\InvalidArgumentException
      */
@@ -175,8 +184,9 @@ abstract class AlternativeCacheStore extends TaggableStore
      * Note: be careful implementing database native increment - real $key in db may be not
      * the same as $this->itemKey($key)
      *
-     * @param string $key
-     * @param int    $value
+     * @param string|\Stringable $key
+     * @param int $value
+     *
      * @return int|bool
      */
     public function increment($key, $value = 1)
@@ -196,8 +206,9 @@ abstract class AlternativeCacheStore extends TaggableStore
      * Note: be careful implementing database native increment - real $key in db may be not
      * the same as $this->itemKey($key)
      *
-     * @param string $key
-     * @param int    $value
+     * @param string|\Stringable $key
+     * @param int $value
+     *
      * @return int|bool
      */
     public function decrement($key, $value = 1)
@@ -215,8 +226,9 @@ abstract class AlternativeCacheStore extends TaggableStore
     /**
      * Store an item in the cache indefinitely.
      *
-     * @param string $key
-     * @param mixed  $value
+     * @param string|\Stringable $key
+     * @param mixed $value
+     *
      * @return bool
      * @throws \Psr\Cache\InvalidArgumentException
      */
@@ -228,7 +240,8 @@ abstract class AlternativeCacheStore extends TaggableStore
     /**
      * Remove an item from the cache.
      *
-     * @param string $key
+     * @param string|\Stringable $key
+     *
      * @return bool
      * @throws \Psr\Cache\InvalidArgumentException
      */
@@ -292,6 +305,7 @@ abstract class AlternativeCacheStore extends TaggableStore
 
     /**
      * @param mixed $value
+     *
      * @return int|string
      */
     protected function encodeValue($value)
@@ -305,14 +319,15 @@ abstract class AlternativeCacheStore extends TaggableStore
     }
 
     /**
-     * @param string                                    $key
-     * @param mixed                                     $value
-     * @param array|null                                $tags
+     * @param string|\Stringable $key
+     * @param mixed $value
+     * @param array|null $tags
      * @param \DateTimeInterface|\DateInterval|int|null $ttl - int: seconds
+     *
      * @return CacheItem
      * @throws \Psr\Cache\InvalidArgumentException
      */
-    protected function newItem(string $key, $value, ?array $tags = null, $ttl = null)
+    protected function newItem($key, $value, ?array $tags = null, $ttl = null)
     {
         $ttl = $ttl === null ? $this->getDefaultDuration() : max(1, (int)$ttl);
         $item = $this->getWrappedConnection()->getItem($this->itemKey($key));
@@ -327,10 +342,12 @@ abstract class AlternativeCacheStore extends TaggableStore
 
     /**
      * Convert user-friendly key to a real key in storage
+     *
+     * @param string|\Stringable $key
      */
-    public function itemKey(string $key): string
+    public function itemKey($key): string
     {
-        return $this->prefix . $this->fixItemKey($key);
+        return $this->prefix . $this->fixItemKey((string)$key);
     }
 
     /**
@@ -368,6 +385,7 @@ abstract class AlternativeCacheStore extends TaggableStore
      * Begin executing a new tags operation.
      *
      * @param array|string $names
+     *
      * @return AlternativeTaggedCache|TaggedCache
      * @throws \Psr\Cache\InvalidArgumentException
      */

@@ -39,7 +39,7 @@ class AlternativeTagSet extends TagSet
 
     public function tagKey($name): string
     {
-        return $this->store->itemKey($name);
+        return $this->store->itemKey((string) $name);
     }
 
     public function getKeys(): array

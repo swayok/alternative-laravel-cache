@@ -11,6 +11,7 @@ use Cache\Hierarchy\HierarchicalPoolInterface;
 use Cache\TagInterop\TaggableCacheItemPoolInterface;
 use Illuminate\Cache\TaggableStore;
 use Illuminate\Cache\TaggedCache;
+use Psr\Log\LoggerInterface;
 
 abstract class AlternativeCacheStore extends TaggableStore
 {
@@ -36,14 +37,21 @@ abstract class AlternativeCacheStore extends TaggableStore
     protected $connection;
 
     /**
-     * Wrapped connection (see http://www.php-cache.com/)
+     * Wrapped connection (see http://www.php-cache.com/).
      *
      * @var AbstractCachePool|HierarchicalPoolInterface|TaggableCacheItemPoolInterface
      */
     protected $wrappedConnection;
 
     /**
-     * Tags list. Used only for 1 operation (put, putMany, flush, forever)
+     * Logger for wrapped connection.
+     *
+     * @var LoggerInterface
+     */
+    protected $logger;
+
+    /**
+     * Tags list. Used only for 1 operation (put, putMany, flush, forever).
      *
      * @var null|array
      */
@@ -97,8 +105,22 @@ abstract class AlternativeCacheStore extends TaggableStore
     {
         if ($this->wrappedConnection === null) {
             $this->wrappedConnection = $this->wrapConnection();
+            if ($this->logger) {
+                $this->wrappedConnection->setLogger($this->logger);
+            }
         }
         return $this->wrappedConnection;
+    }
+
+    /**
+     * Set logger for wrapped connection.
+     */
+    public function setLogger(LoggerInterface $logger): void
+    {
+        $this->logger = $logger;
+        if ($this->wrappedConnection) {
+            $this->wrappedConnection->setLogger($this->logger);
+        }
     }
 
     public function getHierarchySeparator(): string

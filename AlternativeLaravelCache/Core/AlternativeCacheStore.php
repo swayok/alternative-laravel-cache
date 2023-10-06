@@ -97,6 +97,7 @@ abstract class AlternativeCacheStore extends TaggableStore
     {
         if ($this->wrappedConnection === null) {
             $this->wrappedConnection = $this->wrapConnection();
+            $this->wrappedConnection->setLogger(app('log'));
         }
         return $this->wrappedConnection;
     }

@@ -337,7 +337,7 @@ abstract class AlternativeCacheStore extends TaggableStore
 
     protected function getDefaultDuration(): int
     {
-        return 525600;
+        return 31536000; //< 365 days
     }
 
     /**

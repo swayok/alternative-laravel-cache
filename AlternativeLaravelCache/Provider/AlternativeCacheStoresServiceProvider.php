@@ -83,7 +83,7 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider
                     );
                 }
                 $store->setLogger($app->make('log'));
-                return $cacheManager->repository($store);
+                return $cacheManager->repository($store, $cacheConfig);
             }
         );
     }
@@ -114,7 +114,7 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider
                     );
                 }
                 $store->setLogger($app->make('log'));
-                return $cacheManager->repository($store);
+                return $cacheManager->repository($store, $cacheConfig);
             }
         );
     }
@@ -132,7 +132,7 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider
                     $store = new AlternativeFileCacheStore($db, $provider->getPrefix($cacheConfig));
                 }
                 $store->setLogger($app->make('log'));
-                return $cacheManager->repository($store);
+                return $cacheManager->repository($store, $cacheConfig);
             }
         );
     }
@@ -150,7 +150,7 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider
                     $store = new AlternativeHierarchialFileCacheStore($db, $provider->getPrefix($cacheConfig));
                 }
                 $store->setLogger($app->make('log'));
-                return $cacheManager->repository($store);
+                return $cacheManager->repository($store, $cacheConfig);
             }
         );
     }

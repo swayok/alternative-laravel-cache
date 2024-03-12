@@ -8,3 +8,5 @@ tests/storage/framework/cache
 tests/storage/logs
 _ide_helper.php
 .phpunit.result.cache
+.phpunit.cache
+phpunit.sh

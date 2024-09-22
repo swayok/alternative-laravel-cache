@@ -247,7 +247,7 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider
      */
     public function getPrefix(array $config): string
     {
-        return Arr::get($config, 'prefix') ?: config('cache.prefix');
+        return Arr::get($config, 'prefix') ?? config('cache.prefix');
     }
 
     public function getConnectionName(array $cacheConfig): string

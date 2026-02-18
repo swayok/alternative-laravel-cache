@@ -30,8 +30,8 @@
         }
     },
     "require": {
-        "php": ">=7.2.5",
-        "laravel/framework": ">=6.0",
+        "php": ">=8.3",
+        "laravel/framework": ">=11.0",
         "cache/adapter-common": "^1.3.0",
         "cache/hierarchical-cache": "^1.2.0"
     },
@@ -40,7 +40,7 @@
         "cache/predis-adapter": "^1.2.0",
         "swayok/cache-filesystem-adapter": "^1.3.2",
         "cache/memcached-adapter": "^1.2.0",
-        "phpunit/phpunit": "^10.5"
+        "phpunit/phpunit": "^10.5|^12.5.2"
     },
     "suggest": {
         "cache/redis-adapter": "Required to use Redis-based cache through php-redis extension (recommended - faster and more stable then predis)",

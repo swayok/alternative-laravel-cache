@@ -41,4 +41,17 @@ class AlternativeFileCacheStore extends AlternativeCacheStore {
             $key
         ));
     }
+
+
+    /**
+     * Set the expiration of a cached item.
+     *
+     * @param  string  $key
+     * @param  int  $seconds
+     * @return bool
+     */
+    public function touch($key, $seconds){
+        return false;
+    }
+    
 }

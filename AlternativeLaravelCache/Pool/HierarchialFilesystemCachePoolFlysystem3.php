@@ -58,7 +58,7 @@ class HierarchialFilesystemCachePoolFlysystem3 extends AbstractCachePool impleme
     /**
      * {@inheritdoc}
      */
-    public function save(CacheItemInterface $item)
+    public function save(CacheItemInterface $item): bool
     {
         $this->saveTags($item);
         return parent::save($item);

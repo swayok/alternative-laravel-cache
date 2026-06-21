@@ -11,6 +11,7 @@
 
 namespace AlternativeLaravelCache\Vendors\Common;
 
+use AlternativeLaravelCache\Vendors\TagInterop\TaggableCacheItemInterface;
 use AlternativeLaravelCache\Vendors\TagInterop\TaggableCacheItemPoolInterface;
 
 /**
@@ -23,12 +24,12 @@ interface PhpCachePool extends TaggableCacheItemPoolInterface
      *
      * @return PhpCacheItem
      */
-    public function getItem($key);
+    public function getItem($key): TaggableCacheItemInterface;
 
     /**
      * {@inheritdoc}
      *
      * @return array|\Traversable|PhpCacheItem[]
      */
-    public function getItems(array $keys = []);
+    public function getItems(array $keys = []): iterable;
 }

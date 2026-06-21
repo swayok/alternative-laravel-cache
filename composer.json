@@ -32,8 +32,8 @@
     "require": {
         "php": ">=7.4",
         "laravel/framework": ">=6.0",
-        "psr/cache": "^1.0 || ^2.0",
-        "psr/simple-cache": "^1.0 || ^2.0",
+        "psr/cache": ">=3.0",
+        "psr/simple-cache": ">=3.0",
         "psr/log": ">=1.0"
     },
     "require-dev": {

@@ -49,12 +49,12 @@ interface TaggableCacheItemPoolInterface extends CacheItemPoolInterface
      *
      * @return TaggableCacheItemInterface
      */
-    public function getItem($key);
+    public function getItem($key): TaggableCacheItemInterface;
 
     /**
      * {@inheritdoc}
      *
      * @return array|\Traversable|TaggableCacheItemInterface[]
      */
-    public function getItems(array $keys = []);
+    public function getItems(array $keys = []): iterable;
 }

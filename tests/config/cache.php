@@ -45,9 +45,9 @@ return [
             ]
         ],
         
-        'hierarchial_file' => [
-            'driver' => 'hierarchial_file',
-            'path'   => storage_path('framework/cache/hierarchial_file'),
+        'hierarchical_file' => [
+            'driver' => 'hierarchical_file',
+            'path'   => storage_path('framework/cache/hierarchical_file'),
         ],
 
         'redis' => [

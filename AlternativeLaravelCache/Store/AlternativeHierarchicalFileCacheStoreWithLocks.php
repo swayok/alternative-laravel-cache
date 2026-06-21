@@ -6,7 +6,7 @@ namespace AlternativeLaravelCache\Store;
 
 use Illuminate\Cache\HasCacheLock;
 
-class AlternativeHierarchialFileCacheStoreWithLocks extends AlternativeHierarchialFileCacheStore
+class AlternativeHierarchicalFileCacheStoreWithLocks extends AlternativeHierarchicalFileCacheStore
 {
     use HasCacheLock;
 }

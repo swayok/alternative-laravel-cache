@@ -7,8 +7,8 @@ namespace AlternativeLaravelCache\Provider;
 
 use AlternativeLaravelCache\Store\AlternativeFileCacheStore;
 use AlternativeLaravelCache\Store\AlternativeFileCacheStoreWithLocks;
-use AlternativeLaravelCache\Store\AlternativeHierarchialFileCacheStore;
-use AlternativeLaravelCache\Store\AlternativeHierarchialFileCacheStoreWithLocks;
+use AlternativeLaravelCache\Store\AlternativeHierarchicalFileCacheStore;
+use AlternativeLaravelCache\Store\AlternativeHierarchicalFileCacheStoreWithLocks;
 use AlternativeLaravelCache\Store\AlternativeMemcachedCacheStore;
 use AlternativeLaravelCache\Store\AlternativeMemcachedCacheStoreWithLocks;
 use AlternativeLaravelCache\Store\AlternativeRedisCacheStore;
@@ -25,7 +25,7 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider
     protected $redisDriverName = 'redis';
     protected $memcacheDriverName = 'memcached';
     protected $fileDriverName = 'file';
-    protected $hierarchialFileDriverName = 'hierarchial_file';
+    protected $hierarchicalFileDriverName = 'hierarchical_file';
 
     protected $defaultPermissions = [
         'file' => [
@@ -133,13 +133,13 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider
     {
         $provider = $this;
         $cacheManager->extend(
-            $this->hierarchialFileDriverName,
+            $this->hierarchicalFileDriverName,
             function (Application $app, array $cacheConfig) use ($hasLocks, $provider, $cacheManager) {
                 $db = new Filesystem($provider->makeFileCacheAdapter($cacheConfig));
                 if ($hasLocks) {
-                    $store = new AlternativeHierarchialFileCacheStoreWithLocks($db, $provider->getPrefix($cacheConfig));
+                    $store = new AlternativeHierarchicalFileCacheStoreWithLocks($db, $provider->getPrefix($cacheConfig));
                 } else {
-                    $store = new AlternativeHierarchialFileCacheStore($db, $provider->getPrefix($cacheConfig));
+                    $store = new AlternativeHierarchicalFileCacheStore($db, $provider->getPrefix($cacheConfig));
                 }
                 $store->setLogger($app->make('log'));
                 return $cacheManager->repository($store, $cacheConfig);
@@ -152,7 +152,7 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider
     {
         switch (strtolower($cacheConfig['driver'])) {
             case $this->fileDriverName:
-            case $this->hierarchialFileDriverName:
+            case $this->hierarchicalFileDriverName:
                 $permissions = $this->getNormalizedPermissions($cacheConfig);
                 if (class_exists('League\Flysystem\Adapter\Local')) {
                     return new \League\Flysystem\Adapter\Local(

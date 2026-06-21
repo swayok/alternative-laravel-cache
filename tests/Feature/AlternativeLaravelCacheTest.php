@@ -28,8 +28,8 @@ class AlternativeLaravelCacheTest extends TestCase
                     'path' => storage_path('framework/cache'),
                 ],
 
-                'hierarchial_file' => [
-                    'driver' => 'hierarchial_file',
+                'hierarchical_file' => [
+                    'driver' => 'hierarchical_file',
                     'path' => storage_path('framework/cache'),
                 ],
 
@@ -72,12 +72,12 @@ class AlternativeLaravelCacheTest extends TestCase
         $redisStore = $this->getCache()->store('redis');
         /** @var AlternativeFileCacheStore|Repository $fileStore */
         $fileStore = $this->getCache()->store('file');
-        /** @var AlternativeFileCacheStore|Repository $hierarchialFileStore */
-        $hierarchialFileStore = $this->getCache()->store('hierarchial_file');
+        /** @var AlternativeFileCacheStore|Repository $hierarchicalFileStore */
+        $hierarchicalFileStore = $this->getCache()->store('hierarchical_file');
 
         $redisStore->flush();
         $fileStore->flush();
-        $hierarchialFileStore->flush();
+        $hierarchicalFileStore->flush();
 
         parent::tearDown();
     }
@@ -151,33 +151,33 @@ class AlternativeLaravelCacheTest extends TestCase
         }
     }
 
-    public function testHierarchialFileCache(): void
+    public function testHierarchicalFileCache(): void
     {
-        /** @var AlternativeFileCacheStore|Repository $hierarchialFileStore */
-        $hierarchialFileStore = $this->getCache()->store('hierarchial_file');
-        $hierarchialFileStore->flush();
+        /** @var AlternativeFileCacheStore|Repository $hierarchicalFileStore */
+        $hierarchicalFileStore = $this->getCache()->store('hierarchical_file');
+        $hierarchicalFileStore->flush();
         $key1 = 'key1|subkey1';
-        $hierarchialFileStore->put($key1, 'value1', 3600);
-        static::assertEquals('value1', $hierarchialFileStore->get($key1));
+        $hierarchicalFileStore->put($key1, 'value1', 3600);
+        static::assertEquals('value1', $hierarchicalFileStore->get($key1));
         $key2 = 'key1|subkey2';
-        $hierarchialFileStore->put($key2, 'value2', 3600);
-        static::assertEquals('value2', $hierarchialFileStore->get($key2));
+        $hierarchicalFileStore->put($key2, 'value2', 3600);
+        static::assertEquals('value2', $hierarchicalFileStore->get($key2));
         $key3 = 'key2|subkey1';
-        $hierarchialFileStore->put($key3, 'value3', 3600);
-        static::assertEquals('value3', $hierarchialFileStore->get($key3));
-        $hierarchialFileStore->forget('key1');
-        static::assertNull($hierarchialFileStore->get($key1));
-        static::assertNull($hierarchialFileStore->get($key2));
-        static::assertEquals('value3', $hierarchialFileStore->get($key3));
+        $hierarchicalFileStore->put($key3, 'value3', 3600);
+        static::assertEquals('value3', $hierarchicalFileStore->get($key3));
+        $hierarchicalFileStore->forget('key1');
+        static::assertNull($hierarchicalFileStore->get($key1));
+        static::assertNull($hierarchicalFileStore->get($key2));
+        static::assertEquals('value3', $hierarchicalFileStore->get($key3));
 
         $key4 = new StringableTestClassPhp7('key4|subkey1');
-        $hierarchialFileStore->put($key4, 'value1', 3600);
-        static::assertEquals('value1', $hierarchialFileStore->get($key4));
+        $hierarchicalFileStore->put($key4, 'value1', 3600);
+        static::assertEquals('value1', $hierarchicalFileStore->get($key4));
 
         if (PHP_VERSION_ID >= 80000) {
             $key5 = new StringableTestClassPhp8('key5|subkey1');
-            $hierarchialFileStore->put($key5, 'value1', 3600);
-            static::assertEquals('value1', $hierarchialFileStore->get($key5));
+            $hierarchicalFileStore->put($key5, 'value1', 3600);
+            static::assertEquals('value1', $hierarchicalFileStore->get($key5));
         }
     }
 
@@ -187,12 +187,12 @@ class AlternativeLaravelCacheTest extends TestCase
         $redisStore = $this->getCache()->store('redis');
         /** @var AlternativeFileCacheStore|Repository $fileStore */
         $fileStore = $this->getCache()->store('file');
-        /** @var AlternativeFileCacheStore|Repository $hierarchialFileStore */
-        $hierarchialFileStore = $this->getCache()->store('hierarchial_file');
+        /** @var AlternativeFileCacheStore|Repository $hierarchicalFileStore */
+        $hierarchicalFileStore = $this->getCache()->store('hierarchical_file');
 
         $redisStore->flush();
         $fileStore->flush();
-        $hierarchialFileStore->flush();
+        $hierarchicalFileStore->flush();
 
         $key1 = 'key1|subkey/sskey\\ssskey1';
         $key2 = 'key1|subkey/sskey\\ssskey2';
@@ -207,10 +207,10 @@ class AlternativeLaravelCacheTest extends TestCase
         $fileStore->tags(['tag3'])->put($key2, 'value22', 3600);
         static::assertEquals('value22', $fileStore->get($key2));
 
-        $hierarchialFileStore->tags(['tag1', 'tag2'])->put($key1, 'value3', 3600);
-        static::assertEquals('value3', $hierarchialFileStore->get($key1));
-        $hierarchialFileStore->tags(['tag3'])->put($key2, 'value33', 3600);
-        static::assertEquals('value33', $hierarchialFileStore->get($key2));
+        $hierarchicalFileStore->tags(['tag1', 'tag2'])->put($key1, 'value3', 3600);
+        static::assertEquals('value3', $hierarchicalFileStore->get($key1));
+        $hierarchicalFileStore->tags(['tag3'])->put($key2, 'value33', 3600);
+        static::assertEquals('value33', $hierarchicalFileStore->get($key2));
 
         $redisStore->tags(['tag1'])->flush();
         static::assertEquals('value11', $redisStore->get($key2));
@@ -220,15 +220,15 @@ class AlternativeLaravelCacheTest extends TestCase
         static::assertEquals('value22', $fileStore->get($key2));
         static::assertNull($fileStore->get($key1));
 
-        $hierarchialFileStore->tags(['tag1'])->flush();
-        static::assertEquals('value33', $hierarchialFileStore->get($key2));
-        static::assertNull($hierarchialFileStore->get($key1));
+        $hierarchicalFileStore->tags(['tag1'])->flush();
+        static::assertEquals('value33', $hierarchicalFileStore->get($key2));
+        static::assertNull($hierarchicalFileStore->get($key1));
 
         // stringable tags
 
         $redisStore->flush();
         $fileStore->flush();
-        $hierarchialFileStore->flush();
+        $hierarchicalFileStore->flush();
 
         $stringableTag1 = new StringableTestClassPhp7('stringable_tag1');
 
@@ -242,10 +242,10 @@ class AlternativeLaravelCacheTest extends TestCase
         $fileStore->tags($stringableTag1)->flush();
         static::assertNull($fileStore->get($key1));
 
-        $hierarchialFileStore->tags($stringableTag1)->put($key1, 'value1', 3600);
-        static::assertEquals('value1', $hierarchialFileStore->get($key1));
-        $hierarchialFileStore->tags($stringableTag1)->flush();
-        static::assertNull($hierarchialFileStore->get($key1));
+        $hierarchicalFileStore->tags($stringableTag1)->put($key1, 'value1', 3600);
+        static::assertEquals('value1', $hierarchicalFileStore->get($key1));
+        $hierarchicalFileStore->tags($stringableTag1)->flush();
+        static::assertNull($hierarchicalFileStore->get($key1));
 
         if (PHP_VERSION_ID >= 80000) {
             $stringableTag2 = new StringableTestClassPhp8('stringable_tag2');
@@ -260,10 +260,10 @@ class AlternativeLaravelCacheTest extends TestCase
             $fileStore->tags($stringableTag2)->flush();
             static::assertNull($fileStore->get($key1));
 
-            $hierarchialFileStore->tags($stringableTag2)->put($key1, 'value1', 3600);
-            static::assertEquals('value1', $hierarchialFileStore->get($key1));
-            $hierarchialFileStore->tags($stringableTag2)->flush();
-            static::assertNull($hierarchialFileStore->get($key1));
+            $hierarchicalFileStore->tags($stringableTag2)->put($key1, 'value1', 3600);
+            static::assertEquals('value1', $hierarchicalFileStore->get($key1));
+            $hierarchicalFileStore->tags($stringableTag2)->flush();
+            static::assertNull($hierarchicalFileStore->get($key1));
         }
     }
 
@@ -293,12 +293,12 @@ class AlternativeLaravelCacheTest extends TestCase
         $redisStore = $this->getCache()->store('redis');
         /** @var AlternativeFileCacheStoreWithLocks|Repository $fileStore */
         $fileStore = $this->getCache()->store('file');
-        /** @var AlternativeFileCacheStoreWithLocks|Repository $hierarchialFileStore */
-        $hierarchialFileStore = $this->getCache()->store('hierarchial_file');
+        /** @var AlternativeFileCacheStoreWithLocks|Repository $hierarchicalFileStore */
+        $hierarchicalFileStore = $this->getCache()->store('hierarchical_file');
 
         $redisStore->flush();
         $fileStore->flush();
-        $hierarchialFileStore->flush();
+        $hierarchicalFileStore->flush();
 
         // redis locks
         static::assertTrue(method_exists($redisStore->getStore(), 'lock'));
@@ -316,15 +316,15 @@ class AlternativeLaravelCacheTest extends TestCase
         $fileStore->restoreLock('test', 'tests');
         $lock->release();
 
-        // hierarchial file locks
-        static::assertTrue(method_exists($hierarchialFileStore->getStore(), 'lock'));
-        static::assertTrue(method_exists($hierarchialFileStore->getStore(), 'restoreLock'));
-        $lock = $hierarchialFileStore->lock('test', 10, 'tests');
-        $hierarchialFileStore->restoreLock('test', 'tests');
+        // hierarchical file locks
+        static::assertTrue(method_exists($hierarchicalFileStore->getStore(), 'lock'));
+        static::assertTrue(method_exists($hierarchicalFileStore->getStore(), 'restoreLock'));
+        $lock = $hierarchicalFileStore->lock('test', 10, 'tests');
+        $hierarchicalFileStore->restoreLock('test', 'tests');
         $lock->release();
     }
 
-    public function testHierarchialCacheKeysInRedis(): void
+    public function testHierarchicalCacheKeysInRedis(): void
     {
         /** @var AlternativeRedisCacheStoreWithLocks|Repository $redisStore */
         $redisStore = $this->getCache()->store('redis');
@@ -399,7 +399,7 @@ class AlternativeLaravelCacheTest extends TestCase
         $redisStore->flush();
     }
 
-    public function testHierarchialCacheKeysInFileStore(): void
+    public function testHierarchicalCacheKeysInFileStore(): void
     {
         /** @var AlternativeFileCacheStoreWithLocks|Repository $fileStore */
         $fileStore = $this->getCache()->store('file');
@@ -474,12 +474,12 @@ class AlternativeLaravelCacheTest extends TestCase
         $fileStore->flush();
     }
 
-    public function testHierarchialCacheKeysInHierarchialFileStore(): void
+    public function testHierarchicalCacheKeysInHierarchicalFileStore(): void
     {
-        /** @var AlternativeFileCacheStoreWithLocks|Repository $hierarchialFileStore */
-        $hierarchialFileStore = $this->getCache()->store('hierarchial_file');
+        /** @var AlternativeFileCacheStoreWithLocks|Repository $hierarchicalFileStore */
+        $hierarchicalFileStore = $this->getCache()->store('hierarchical_file');
 
-        $hierarchialFileStore->flush();
+        $hierarchicalFileStore->flush();
 
         $keyPiped = 'key1|subkey1|sskey1|ssskey1';
         $keySlashed = 'key2/subkey2/sskey2/ssskey2';
@@ -488,65 +488,65 @@ class AlternativeLaravelCacheTest extends TestCase
         $flushSlashedKeyUsingPipe = 'key2|subkey2';
         $flushSlashedKeyUsingSlash = 'key2/subkey2';
 
-        $hierarchialFileStore->put($keyPiped, 'value3', 3600);
-        static::assertEquals('value3', $hierarchialFileStore->get($keyPiped));
-        $hierarchialFileStore->put($keySlashed, 'value33', 3600);
-        static::assertEquals('value33', $hierarchialFileStore->get($keySlashed));
+        $hierarchicalFileStore->put($keyPiped, 'value3', 3600);
+        static::assertEquals('value3', $hierarchicalFileStore->get($keyPiped));
+        $hierarchicalFileStore->put($keySlashed, 'value33', 3600);
+        static::assertEquals('value33', $hierarchicalFileStore->get($keySlashed));
 
         // $keyPiped -> flush by $flushPipedKeyUsingPipe
 
-        $hierarchialFileStore->forget($flushPipedKeyUsingPipe);
+        $hierarchicalFileStore->forget($flushPipedKeyUsingPipe);
 
-        static::assertNull($hierarchialFileStore->get($keyPiped));
-        static::assertEquals('value33', $hierarchialFileStore->get($keySlashed));
+        static::assertNull($hierarchicalFileStore->get($keyPiped));
+        static::assertEquals('value33', $hierarchicalFileStore->get($keySlashed));
 
         // $keyPiped -> flush by $flushPipiedKeyUsingSlash
 
-        $hierarchialFileStore->put($keyPiped, 'value3', 3600);
-        $hierarchialFileStore->put($keySlashed, 'value33', 3600);
+        $hierarchicalFileStore->put($keyPiped, 'value3', 3600);
+        $hierarchicalFileStore->put($keySlashed, 'value33', 3600);
 
-        $hierarchialFileStore->forget($flushPipedKeyUsingSlash);
+        $hierarchicalFileStore->forget($flushPipedKeyUsingSlash);
 
-        static::assertNull($hierarchialFileStore->get($keyPiped));
-        static::assertEquals('value33', $hierarchialFileStore->get($keySlashed));
+        static::assertNull($hierarchicalFileStore->get($keyPiped));
+        static::assertEquals('value33', $hierarchicalFileStore->get($keySlashed));
 
         // $keySlashed -> flush by $flushSlashedKeyUsingPipe
 
-        $hierarchialFileStore->put($keyPiped, 'value3', 3600);
-        $hierarchialFileStore->put($keySlashed, 'value33', 3600);
+        $hierarchicalFileStore->put($keyPiped, 'value3', 3600);
+        $hierarchicalFileStore->put($keySlashed, 'value33', 3600);
 
-        $hierarchialFileStore->forget($flushSlashedKeyUsingPipe);
+        $hierarchicalFileStore->forget($flushSlashedKeyUsingPipe);
 
-        static::assertEquals('value3', $hierarchialFileStore->get($keyPiped));
-        static::assertNull($hierarchialFileStore->get($keySlashed));
+        static::assertEquals('value3', $hierarchicalFileStore->get($keyPiped));
+        static::assertNull($hierarchicalFileStore->get($keySlashed));
 
         // $keySlashed -> flush by $flushSlashedKeyUsingSlash
 
-        $hierarchialFileStore->put($keyPiped, 'value3', 3600);
-        $hierarchialFileStore->put($keySlashed, 'value33', 3600);
+        $hierarchicalFileStore->put($keyPiped, 'value3', 3600);
+        $hierarchicalFileStore->put($keySlashed, 'value33', 3600);
 
-        $hierarchialFileStore->forget($flushSlashedKeyUsingSlash);
+        $hierarchicalFileStore->forget($flushSlashedKeyUsingSlash);
 
-        static::assertEquals('value3', $hierarchialFileStore->get($keyPiped));
-        static::assertNull($hierarchialFileStore->get($keySlashed));
+        static::assertEquals('value3', $hierarchicalFileStore->get($keyPiped));
+        static::assertNull($hierarchicalFileStore->get($keySlashed));
 
         // stringable key
 
         $stringableKey1 = new StringableTestClassPhp7('stringable1|subkey1|sskey1|ssskey1');
-        $hierarchialFileStore->put($stringableKey1, 'value1', 3600);
-        static::assertEquals('value1', $hierarchialFileStore->get($stringableKey1));
-        $hierarchialFileStore->forget('stringable1|subkey1');
-        static::assertNull($hierarchialFileStore->get($stringableKey1));
+        $hierarchicalFileStore->put($stringableKey1, 'value1', 3600);
+        static::assertEquals('value1', $hierarchicalFileStore->get($stringableKey1));
+        $hierarchicalFileStore->forget('stringable1|subkey1');
+        static::assertNull($hierarchicalFileStore->get($stringableKey1));
 
         if (PHP_VERSION_ID >= 80000) {
             $stringableKey2 = new StringableTestClassPhp8('stringable2|subkey1|sskey1|ssskey1');
-            $hierarchialFileStore->put($stringableKey2, 'value1', 3600);
-            static::assertEquals('value1', $hierarchialFileStore->get($stringableKey2));
-            $hierarchialFileStore->forget('stringable2|subkey1');
-            static::assertNull($hierarchialFileStore->get($stringableKey2));
+            $hierarchicalFileStore->put($stringableKey2, 'value1', 3600);
+            static::assertEquals('value1', $hierarchicalFileStore->get($stringableKey2));
+            $hierarchicalFileStore->forget('stringable2|subkey1');
+            static::assertNull($hierarchicalFileStore->get($stringableKey2));
         }
 
-        $hierarchialFileStore->flush();
+        $hierarchicalFileStore->flush();
     }
 
     public function testMemcachedLocks(): void

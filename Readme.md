@@ -1,6 +1,6 @@
 # What is this?
 This is full-featured replacement for Laravel's Redis and file cache storages. All storages support proper tagging. 
-Cache pools provided by http://www.php-cache.com/ + I've added `HierarchialFilesystemCachePool` based on code of 
+Cache pools provided by http://www.php-cache.com/ + I've added `HierarchicalFilesystemCachePool` based on code of 
 `FilesystemCachePool` provided by http://www.php-cache.com/. All classes in this lib are proxies between Laravel's 
 cache system and cache pools from http://www.php-cache.com/. I do not have any relation to php-cache.com and any cache pools there. 
 And in result I cannot fix or change anything to the way cache pools are working. 
@@ -29,7 +29,7 @@ How Laravel's native cache works with tags and Redis (Laravel 5.2):
 
 If you think that this is correct behavior - go away, you don't need this lib.
 
-I was quite confused when attempted to use Laravel's version of tagging. Laravel's version works like folders (hierarchial cache), but not like tags. 
+I was quite confused when attempted to use Laravel's version of tagging. Laravel's version works like folders (hierarchical cache), but not like tags. 
 I tried to understand for what purpose Laravel's tagging can be used and haven't found any. It's totally useless in almost any situation. 
 Hopefully there are compatible drivers provided by http://www.php-cache.com/.
 
@@ -90,40 +90,7 @@ Add to `composer.json`:
         "swayok/alternative-laravel-cache": "5.3.*"
     }
     
-### Filesystem support
-
-Add to `composer.json`:
-
-    "require": {
-        "swayok/cache-filesystem-adapter": "^1.0.0"
-    }
     
-### Redis support
-
-To use `predis` add to `composer.json`:
-
-    "require": {
-        "cache/predis-adapter": "^1.0"
-    }
-    
-To use `php-redis` extension add to `composer.json:
-
-    "require": {
-        "ext-redis": "*",
-        "cache/redis-adapter": "^1.0"
-    }
-
-### Memcached support (NOT supported in Windows!)
-
-Add to `composer.json`:
-
-    "require": {
-        "ext-memcached": "*",
-        "cache/memcached-adapter": "^1.0"
-    }
-
-For Windows there are only `memcache` extension (without D at the end) but there are no such driver in Laravel.
-
 ### Declare ServiceProvider
 
 ### For Laravel 5.6+
@@ -140,15 +107,15 @@ Add to `config/app.php`:
     
 ### Supported cache drivers
 
-- `redis` - redis cache with proper tagging, also supports hierarchical cache keys;  
-- `memcached` - memcached cache with proper tagging, also supports hierarchical cache keys;
-- `file` - simple file-based cache with proper tagging;
-- `hierarchial_file` - hierarchical file-based cache with proper tagging.
+- `redis` - redis cache with proper tagging, also supports hierarchical cache keys and locks;  
+- `memcached` - memcached cache with proper tagging, also supports hierarchical cache keys and locks;
+- `file` - simple file-based cache with proper tagging and locks;
+- `hierarchical_file` - hierarchical file-based cache with proper tagging and locks.
 This driver also supports `/` instead of `|` so you can use `/users/:uid/followers/:fid/likes` instead of `|users|:uid|followers|:fid|likes`
 as it better represents path in file system.
 
 ## Pipe character `|` in cache key (hierarchical cache keys)
-Pipe character `|` for `redis`, `memcached` and `hierarchial_file` drivers works as hierarchy separator. This means that 
+Pipe character `|` for `redis`, `memcached` and `hierarchical_file` drivers works as hierarchy separator. This means that 
 cache keys that contain `|` will work as hierarchy. Detals here: http://www.php-cache.com/en/latest/hierarchy/
 
     // Put key with colons (treated as usual cache key)
@@ -177,7 +144,7 @@ cache keys that contain `|` will work as hierarchy. Detals here: http://www.php-
     null
 
 ## Slash character `/` in cache key
-Slash character `/` for `hierarchial_file` driver works as hierarchy separator like pipe character `|`.
+Slash character `/` for `hierarchical_file` driver works as hierarchy separator like pipe character `|`.
 This was added to mimic folder structure.
 
 ### `permissions` configuration parameter for file-based cache drivers (`config/cache.php`)
@@ -214,4 +181,3 @@ You can alter this behavior like this:
 File cache storage currently supports only `'driver' => 'file'`. You can extend list of file cache drivers by  
 overwriting `AlternativeCacheStoresServiceProvider->makeFileCacheAdapter()`.
 
-Yep, there are not many tests right now and possibly there will never be more. 

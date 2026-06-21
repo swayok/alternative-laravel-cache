@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace AlternativeLaravelCache\Store;
 
 use AlternativeLaravelCache\Core\AlternativeCacheStore;
-use AlternativeLaravelCache\Pool\HierarchialFilesystemCachePoolFlysystem1;
-use AlternativeLaravelCache\Pool\HierarchialFilesystemCachePoolFlysystem3;
+use AlternativeLaravelCache\Pool\HierarchicalFilesystemCachePoolFlysystem1;
+use AlternativeLaravelCache\Pool\HierarchicalFilesystemCachePoolFlysystem3;
 use AlternativeLaravelCache\Vendors\Common\AbstractCachePool;
 use AlternativeLaravelCache\Vendors\Hierarchy\HierarchicalPoolInterface;
 use AlternativeLaravelCache\Vendors\TagInterop\TaggableCacheItemPoolInterface;
 use League\Flysystem\Filesystem;
 
-class AlternativeHierarchialFileCacheStore extends AlternativeCacheStore
+class AlternativeHierarchicalFileCacheStore extends AlternativeCacheStore
 {
     /**
      * The Illuminate Filesystem instance.
@@ -29,10 +29,10 @@ class AlternativeHierarchialFileCacheStore extends AlternativeCacheStore
     public function wrapConnection()
     {
         if (class_exists('League\Flysystem\Adapter\Local')) {
-            return new HierarchialFilesystemCachePoolFlysystem1($this->getDb());
+            return new HierarchicalFilesystemCachePoolFlysystem1($this->getDb());
         }
 
-        return new HierarchialFilesystemCachePoolFlysystem3($this->getDb());
+        return new HierarchicalFilesystemCachePoolFlysystem3($this->getDb());
     }
 
     public function setPrefix(string $prefix): void

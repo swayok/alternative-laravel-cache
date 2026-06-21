@@ -73,8 +73,4 @@ class AlternativeRedisCacheStore extends AlternativeCacheStore
     {
         return HierarchicalPoolInterface::HIERARCHY_SEPARATOR;
     }
-
-    public function touch($key, $seconds){
-        return false;
-    }
 }

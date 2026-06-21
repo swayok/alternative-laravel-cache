@@ -260,6 +260,26 @@ abstract class AlternativeCacheStore extends TaggableStore
     }
 
     /**
+     * Refresh expiration of the cached item.
+     *
+     * @param string|\Stringable $key
+     * @param int $seconds
+     *
+     * @return bool
+     * @throws \Psr\Cache\InvalidArgumentException
+     */
+    public function touch($key, $seconds)
+    {
+        $payload = $this->getWrappedConnection()->get($this->itemKey($key));
+
+        if (is_null($payload)) {
+            return false;
+        }
+
+        return $this->put($key, $payload, $seconds);
+    }
+
+    /**
      * Remove an item from the cache.
      *
      * @param string|\Stringable $key
@@ -335,6 +355,9 @@ abstract class AlternativeCacheStore extends TaggableStore
         return $value;
     }
 
+    /**
+     * @return int
+     */
     protected function getDefaultDuration(): int
     {
         return 31536000; //< 365 days
@@ -393,6 +416,9 @@ abstract class AlternativeCacheStore extends TaggableStore
         return $this;
     }
 
+    /**
+     * @return array|null
+     */
     public function _pullTags(): ?array
     {
         if ($this->tags !== null) {

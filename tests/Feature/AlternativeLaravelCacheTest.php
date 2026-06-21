@@ -94,28 +94,28 @@ class AlternativeLaravelCacheTest extends TestCase
 
         $key1 = 'key1';
         $redisStore->put($key1, 'value1', 3600);
-        self::assertEquals('value1', $redisStore->get($key1));
+        static::assertEquals('value1', $redisStore->get($key1));
         $fileStore->put($key1, 'value2', 3600);
-        self::assertEquals('value2', $fileStore->get($key1));
+        static::assertEquals('value2', $fileStore->get($key1));
 
         $key2 = 'key1|subkey/sskey\\ssskey';
         $redisStore->put($key2, 'value1', 3600);
-        self::assertEquals('value1', $redisStore->get($key2));
+        static::assertEquals('value1', $redisStore->get($key2));
         $fileStore->put($key2, 'value2', 3600);
-        self::assertEquals('value2', $fileStore->get($key2));
+        static::assertEquals('value2', $fileStore->get($key2));
 
         $key3 = new StringableTestClassPhp7('key3');
         $redisStore->put($key3, 'value1', 3600);
-        self::assertEquals('value1', $redisStore->get($key3));
+        static::assertEquals('value1', $redisStore->get($key3));
         $fileStore->put($key3, 'value2', 3600);
-        self::assertEquals('value2', $fileStore->get($key3));
+        static::assertEquals('value2', $fileStore->get($key3));
 
         if (PHP_VERSION_ID >= 80000) {
             $key4 = new StringableTestClassPhp8('key4');
             $redisStore->put($key4, 'value1', 3600);
-            self::assertEquals('value1', $redisStore->get($key4));
+            static::assertEquals('value1', $redisStore->get($key4));
             $fileStore->put($key4, 'value2', 3600);
-            self::assertEquals('value2', $fileStore->get($key4));
+            static::assertEquals('value2', $fileStore->get($key4));
         }
     }
 
@@ -129,18 +129,22 @@ class AlternativeLaravelCacheTest extends TestCase
 
             $memcachedStore->flush();
 
-            $key1 = 'key1|subkey/sskey\\ssskey';
-            $memcachedStore->put($key1, 'value3', 3600);
-            self::assertEquals('value3', $memcachedStore->get($key1));
+            $key1 = 'key1';
+            $memcachedStore->put($key1, 'value1', 3600);
+            static::assertEquals('value1', $memcachedStore->get($key1));
 
-            $key2 = new StringableTestClassPhp7('key2');
-            $memcachedStore->put($key2, 'value1', 3600);
-            self::assertEquals('value1', $memcachedStore->get($key2));
+            $key2 = 'key1|subkey/sskey\\ssskey';
+            $memcachedStore->put($key2, 'value3', 3600);
+            static::assertEquals('value3', $memcachedStore->get($key2));
+
+            $key3 = new StringableTestClassPhp7('key2');
+            $memcachedStore->put($key3, 'value1', 3600);
+            static::assertEquals('value1', $memcachedStore->get($key3));
 
             if (PHP_VERSION_ID >= 80000) {
-                $key3 = new StringableTestClassPhp8('key3');
-                $memcachedStore->put($key3, 'value1', 3600);
-                self::assertEquals('value1', $memcachedStore->get($key3));
+                $key4 = new StringableTestClassPhp8('key3');
+                $memcachedStore->put($key4, 'value1', 3600);
+                static::assertEquals('value1', $memcachedStore->get($key4));
             }
         } else {
             static::assertTrue(true);
@@ -154,26 +158,26 @@ class AlternativeLaravelCacheTest extends TestCase
         $hierarchialFileStore->flush();
         $key1 = 'key1|subkey1';
         $hierarchialFileStore->put($key1, 'value1', 3600);
-        self::assertEquals('value1', $hierarchialFileStore->get($key1));
+        static::assertEquals('value1', $hierarchialFileStore->get($key1));
         $key2 = 'key1|subkey2';
         $hierarchialFileStore->put($key2, 'value2', 3600);
-        self::assertEquals('value2', $hierarchialFileStore->get($key2));
+        static::assertEquals('value2', $hierarchialFileStore->get($key2));
         $key3 = 'key2|subkey1';
         $hierarchialFileStore->put($key3, 'value3', 3600);
-        self::assertEquals('value3', $hierarchialFileStore->get($key3));
+        static::assertEquals('value3', $hierarchialFileStore->get($key3));
         $hierarchialFileStore->forget('key1');
-        self::assertNull($hierarchialFileStore->get($key1));
-        self::assertNull($hierarchialFileStore->get($key2));
-        self::assertEquals('value3', $hierarchialFileStore->get($key3));
+        static::assertNull($hierarchialFileStore->get($key1));
+        static::assertNull($hierarchialFileStore->get($key2));
+        static::assertEquals('value3', $hierarchialFileStore->get($key3));
 
         $key4 = new StringableTestClassPhp7('key4|subkey1');
         $hierarchialFileStore->put($key4, 'value1', 3600);
-        self::assertEquals('value1', $hierarchialFileStore->get($key4));
+        static::assertEquals('value1', $hierarchialFileStore->get($key4));
 
         if (PHP_VERSION_ID >= 80000) {
             $key5 = new StringableTestClassPhp8('key5|subkey1');
             $hierarchialFileStore->put($key5, 'value1', 3600);
-            self::assertEquals('value1', $hierarchialFileStore->get($key5));
+            static::assertEquals('value1', $hierarchialFileStore->get($key5));
         }
     }
 
@@ -194,31 +198,31 @@ class AlternativeLaravelCacheTest extends TestCase
         $key2 = 'key1|subkey/sskey\\ssskey2';
 
         $redisStore->tags(['tag1', 'tag2'])->put($key1, 'value1', 3600);
-        self::assertEquals('value1', $redisStore->get($key1));
+        static::assertEquals('value1', $redisStore->get($key1));
         $redisStore->tags(['tag3'])->put($key2, 'value11', 3600);
-        self::assertEquals('value11', $redisStore->get($key2));
+        static::assertEquals('value11', $redisStore->get($key2));
 
         $fileStore->tags(['tag1', 'tag2'])->put($key1, 'value2', 3600);
-        self::assertEquals('value2', $fileStore->get($key1));
+        static::assertEquals('value2', $fileStore->get($key1));
         $fileStore->tags(['tag3'])->put($key2, 'value22', 3600);
-        self::assertEquals('value22', $fileStore->get($key2));
+        static::assertEquals('value22', $fileStore->get($key2));
 
         $hierarchialFileStore->tags(['tag1', 'tag2'])->put($key1, 'value3', 3600);
-        self::assertEquals('value3', $hierarchialFileStore->get($key1));
+        static::assertEquals('value3', $hierarchialFileStore->get($key1));
         $hierarchialFileStore->tags(['tag3'])->put($key2, 'value33', 3600);
-        self::assertEquals('value33', $hierarchialFileStore->get($key2));
+        static::assertEquals('value33', $hierarchialFileStore->get($key2));
 
         $redisStore->tags(['tag1'])->flush();
-        self::assertEquals('value11', $redisStore->get($key2));
-        self::assertNull($redisStore->get($key1));
+        static::assertEquals('value11', $redisStore->get($key2));
+        static::assertNull($redisStore->get($key1));
 
         $fileStore->tags(['tag1'])->flush();
-        self::assertEquals('value22', $fileStore->get($key2));
-        self::assertNull($fileStore->get($key1));
+        static::assertEquals('value22', $fileStore->get($key2));
+        static::assertNull($fileStore->get($key1));
 
         $hierarchialFileStore->tags(['tag1'])->flush();
-        self::assertEquals('value33', $hierarchialFileStore->get($key2));
-        self::assertNull($hierarchialFileStore->get($key1));
+        static::assertEquals('value33', $hierarchialFileStore->get($key2));
+        static::assertNull($hierarchialFileStore->get($key1));
 
         // stringable tags
 
@@ -229,37 +233,37 @@ class AlternativeLaravelCacheTest extends TestCase
         $stringableTag1 = new StringableTestClassPhp7('stringable_tag1');
 
         $redisStore->tags($stringableTag1)->put($key1, 'value1', 3600);
-        self::assertEquals('value1', $redisStore->get($key1));
+        static::assertEquals('value1', $redisStore->get($key1));
         $redisStore->tags($stringableTag1)->flush();
-        self::assertNull($redisStore->get($key1));
+        static::assertNull($redisStore->get($key1));
 
         $fileStore->tags($stringableTag1)->put($key1, 'value1', 3600);
-        self::assertEquals('value1', $fileStore->get($key1));
+        static::assertEquals('value1', $fileStore->get($key1));
         $fileStore->tags($stringableTag1)->flush();
-        self::assertNull($fileStore->get($key1));
+        static::assertNull($fileStore->get($key1));
 
         $hierarchialFileStore->tags($stringableTag1)->put($key1, 'value1', 3600);
-        self::assertEquals('value1', $hierarchialFileStore->get($key1));
+        static::assertEquals('value1', $hierarchialFileStore->get($key1));
         $hierarchialFileStore->tags($stringableTag1)->flush();
-        self::assertNull($hierarchialFileStore->get($key1));
+        static::assertNull($hierarchialFileStore->get($key1));
 
         if (PHP_VERSION_ID >= 80000) {
             $stringableTag2 = new StringableTestClassPhp8('stringable_tag2');
 
             $redisStore->tags($stringableTag2)->put($key1, 'value1', 3600);
-            self::assertEquals('value1', $redisStore->get($key1));
+            static::assertEquals('value1', $redisStore->get($key1));
             $redisStore->tags($stringableTag2)->flush();
-            self::assertNull($redisStore->get($key1));
+            static::assertNull($redisStore->get($key1));
 
             $fileStore->tags($stringableTag2)->put($key1, 'value1', 3600);
-            self::assertEquals('value1', $fileStore->get($key1));
+            static::assertEquals('value1', $fileStore->get($key1));
             $fileStore->tags($stringableTag2)->flush();
-            self::assertNull($fileStore->get($key1));
+            static::assertNull($fileStore->get($key1));
 
             $hierarchialFileStore->tags($stringableTag2)->put($key1, 'value1', 3600);
-            self::assertEquals('value1', $hierarchialFileStore->get($key1));
+            static::assertEquals('value1', $hierarchialFileStore->get($key1));
             $hierarchialFileStore->tags($stringableTag2)->flush();
-            self::assertNull($hierarchialFileStore->get($key1));
+            static::assertNull($hierarchialFileStore->get($key1));
         }
     }
 
@@ -274,13 +278,13 @@ class AlternativeLaravelCacheTest extends TestCase
         $key2 = 'key2';
 
         $fileStore->tags(['tag1', 'tag2'])->put($key1, 'value2', 3600);
-        self::assertEquals('value2', $fileStore->get($key1));
+        static::assertEquals('value2', $fileStore->get($key1));
         $fileStore->tags(['tag3'])->put($key2, 'value22', 3600);
-        self::assertEquals('value22', $fileStore->get($key2));
+        static::assertEquals('value22', $fileStore->get($key2));
 
         $fileStore->tags(['tag1'])->flush();
-        self::assertEquals('value22', $fileStore->get($key2));
-        self::assertNull($fileStore->get($key1));
+        static::assertEquals('value22', $fileStore->get($key2));
+        static::assertNull($fileStore->get($key1));
     }
 
     public function testLocks(): void
@@ -335,16 +339,16 @@ class AlternativeLaravelCacheTest extends TestCase
         $flushSlashedKeyUsingSlash = 'key2/subkey2';
 
         $redisStore->put($keyPiped, 'value1', 3600);
-        self::assertEquals('value1', $redisStore->get($keyPiped));
+        static::assertEquals('value1', $redisStore->get($keyPiped));
         $redisStore->put($keySlashed, 'value11', 3600);
-        self::assertEquals('value11', $redisStore->get($keySlashed));
+        static::assertEquals('value11', $redisStore->get($keySlashed));
 
         // $keyPiped -> flush by $flushPipedKeyUsingPipe
 
         $redisStore->forget($flushPipedKeyUsingPipe);
 
-        self::assertNull($redisStore->get($keyPiped));
-        self::assertEquals('value11', $redisStore->get($keySlashed));
+        static::assertNull($redisStore->get($keyPiped));
+        static::assertEquals('value11', $redisStore->get($keySlashed));
 
         // $keyPiped -> flush by $flushPipiedKeyUsingSlash
 
@@ -353,8 +357,8 @@ class AlternativeLaravelCacheTest extends TestCase
 
         $redisStore->forget($flushPipedKeyUsingSlash);
 
-        self::assertEquals('value1', $redisStore->get($keyPiped));
-        self::assertEquals('value11', $redisStore->get($keySlashed));
+        static::assertEquals('value1', $redisStore->get($keyPiped));
+        static::assertEquals('value11', $redisStore->get($keySlashed));
 
         // $keySlashed -> flush by $flushSlashedKeyUsingPipe
 
@@ -363,8 +367,8 @@ class AlternativeLaravelCacheTest extends TestCase
 
         $redisStore->forget($flushSlashedKeyUsingPipe);
 
-        self::assertEquals('value1', $redisStore->get($keyPiped));
-        self::assertEquals('value11', $redisStore->get($keySlashed));
+        static::assertEquals('value1', $redisStore->get($keyPiped));
+        static::assertEquals('value11', $redisStore->get($keySlashed));
 
         // $keySlashed -> flush by $flushSlashedKeyUsingSlash
 
@@ -373,23 +377,23 @@ class AlternativeLaravelCacheTest extends TestCase
 
         $redisStore->forget($flushSlashedKeyUsingSlash);
 
-        self::assertEquals('value1', $redisStore->get($keyPiped));
-        self::assertEquals('value11', $redisStore->get($keySlashed));
+        static::assertEquals('value1', $redisStore->get($keyPiped));
+        static::assertEquals('value11', $redisStore->get($keySlashed));
 
         // stringable key
 
         $stringableKey1 = new StringableTestClassPhp7('stringable1|subkey1|sskey1|ssskey1');
         $redisStore->put($stringableKey1, 'value1', 3600);
-        self::assertEquals('value1', $redisStore->get($stringableKey1));
+        static::assertEquals('value1', $redisStore->get($stringableKey1));
         $redisStore->forget('stringable1|subkey1');
-        self::assertNull($redisStore->get($stringableKey1));
+        static::assertNull($redisStore->get($stringableKey1));
 
         if (PHP_VERSION_ID >= 80000) {
             $stringableKey2 = new StringableTestClassPhp8('stringable2|subkey1|sskey1|ssskey1');
             $redisStore->put($stringableKey2, 'value1', 3600);
-            self::assertEquals('value1', $redisStore->get($stringableKey2));
+            static::assertEquals('value1', $redisStore->get($stringableKey2));
             $redisStore->forget('stringable2|subkey1');
-            self::assertNull($redisStore->get($stringableKey2));
+            static::assertNull($redisStore->get($stringableKey2));
         }
 
         $redisStore->flush();
@@ -410,16 +414,16 @@ class AlternativeLaravelCacheTest extends TestCase
         $flushSlashedKeyUsingSlash = 'key2/subkey2';
 
         $fileStore->put($keyPiped, 'value2', 3600);
-        self::assertEquals('value2', $fileStore->get($keyPiped));
+        static::assertEquals('value2', $fileStore->get($keyPiped));
         $fileStore->put($keySlashed, 'value22', 3600);
-        self::assertEquals('value22', $fileStore->get($keySlashed));
+        static::assertEquals('value22', $fileStore->get($keySlashed));
 
         // $keyPiped -> flush by $flushPipedKeyUsingPipe
 
         $fileStore->forget($flushPipedKeyUsingPipe);
 
-        self::assertEquals('value2', $fileStore->get($keyPiped));
-        self::assertEquals('value22', $fileStore->get($keySlashed));
+        static::assertEquals('value2', $fileStore->get($keyPiped));
+        static::assertEquals('value22', $fileStore->get($keySlashed));
 
         // $keyPiped -> flush by $flushPipiedKeyUsingSlash
 
@@ -428,8 +432,8 @@ class AlternativeLaravelCacheTest extends TestCase
 
         $fileStore->forget($flushPipedKeyUsingSlash);
 
-        self::assertEquals('value2', $fileStore->get($keyPiped));
-        self::assertEquals('value22', $fileStore->get($keySlashed));
+        static::assertEquals('value2', $fileStore->get($keyPiped));
+        static::assertEquals('value22', $fileStore->get($keySlashed));
 
         // $keySlashed -> flush by $flushSlashedKeyUsingPipe
 
@@ -438,8 +442,8 @@ class AlternativeLaravelCacheTest extends TestCase
 
         $fileStore->forget($flushSlashedKeyUsingPipe);
 
-        self::assertEquals('value2', $fileStore->get($keyPiped));
-        self::assertEquals('value22', $fileStore->get($keySlashed));
+        static::assertEquals('value2', $fileStore->get($keyPiped));
+        static::assertEquals('value22', $fileStore->get($keySlashed));
 
         // $keySlashed -> flush by $flushSlashedKeyUsingSlash
 
@@ -448,23 +452,23 @@ class AlternativeLaravelCacheTest extends TestCase
 
         $fileStore->forget($flushSlashedKeyUsingSlash);
 
-        self::assertEquals('value2', $fileStore->get($keyPiped));
-        self::assertEquals('value22', $fileStore->get($keySlashed));
+        static::assertEquals('value2', $fileStore->get($keyPiped));
+        static::assertEquals('value22', $fileStore->get($keySlashed));
 
         // stringable key
 
         $stringableKey1 = new StringableTestClassPhp7('stringable1|subkey1|sskey1|ssskey1');
         $fileStore->put($stringableKey1, 'value1', 3600);
-        self::assertEquals('value1', $fileStore->get($stringableKey1));
+        static::assertEquals('value1', $fileStore->get($stringableKey1));
         $fileStore->forget('stringable1|subkey1');
-        self::assertEquals('value1', $fileStore->get($stringableKey1));
+        static::assertEquals('value1', $fileStore->get($stringableKey1));
 
         if (PHP_VERSION_ID >= 80000) {
             $stringableKey2 = new StringableTestClassPhp8('stringable2|subkey1|sskey1|ssskey1');
             $fileStore->put($stringableKey2, 'value1', 3600);
-            self::assertEquals('value1', $fileStore->get($stringableKey2));
+            static::assertEquals('value1', $fileStore->get($stringableKey2));
             $fileStore->forget('stringable2|subkey1');
-            self::assertEquals('value1', $fileStore->get($stringableKey2));
+            static::assertEquals('value1', $fileStore->get($stringableKey2));
         }
 
         $fileStore->flush();
@@ -485,16 +489,16 @@ class AlternativeLaravelCacheTest extends TestCase
         $flushSlashedKeyUsingSlash = 'key2/subkey2';
 
         $hierarchialFileStore->put($keyPiped, 'value3', 3600);
-        self::assertEquals('value3', $hierarchialFileStore->get($keyPiped));
+        static::assertEquals('value3', $hierarchialFileStore->get($keyPiped));
         $hierarchialFileStore->put($keySlashed, 'value33', 3600);
-        self::assertEquals('value33', $hierarchialFileStore->get($keySlashed));
+        static::assertEquals('value33', $hierarchialFileStore->get($keySlashed));
 
         // $keyPiped -> flush by $flushPipedKeyUsingPipe
 
         $hierarchialFileStore->forget($flushPipedKeyUsingPipe);
 
-        self::assertNull($hierarchialFileStore->get($keyPiped));
-        self::assertEquals('value33', $hierarchialFileStore->get($keySlashed));
+        static::assertNull($hierarchialFileStore->get($keyPiped));
+        static::assertEquals('value33', $hierarchialFileStore->get($keySlashed));
 
         // $keyPiped -> flush by $flushPipiedKeyUsingSlash
 
@@ -503,8 +507,8 @@ class AlternativeLaravelCacheTest extends TestCase
 
         $hierarchialFileStore->forget($flushPipedKeyUsingSlash);
 
-        self::assertNull($hierarchialFileStore->get($keyPiped));
-        self::assertEquals('value33', $hierarchialFileStore->get($keySlashed));
+        static::assertNull($hierarchialFileStore->get($keyPiped));
+        static::assertEquals('value33', $hierarchialFileStore->get($keySlashed));
 
         // $keySlashed -> flush by $flushSlashedKeyUsingPipe
 
@@ -513,8 +517,8 @@ class AlternativeLaravelCacheTest extends TestCase
 
         $hierarchialFileStore->forget($flushSlashedKeyUsingPipe);
 
-        self::assertEquals('value3', $hierarchialFileStore->get($keyPiped));
-        self::assertNull($hierarchialFileStore->get($keySlashed));
+        static::assertEquals('value3', $hierarchialFileStore->get($keyPiped));
+        static::assertNull($hierarchialFileStore->get($keySlashed));
 
         // $keySlashed -> flush by $flushSlashedKeyUsingSlash
 
@@ -523,23 +527,23 @@ class AlternativeLaravelCacheTest extends TestCase
 
         $hierarchialFileStore->forget($flushSlashedKeyUsingSlash);
 
-        self::assertEquals('value3', $hierarchialFileStore->get($keyPiped));
-        self::assertNull($hierarchialFileStore->get($keySlashed));
+        static::assertEquals('value3', $hierarchialFileStore->get($keyPiped));
+        static::assertNull($hierarchialFileStore->get($keySlashed));
 
         // stringable key
 
         $stringableKey1 = new StringableTestClassPhp7('stringable1|subkey1|sskey1|ssskey1');
         $hierarchialFileStore->put($stringableKey1, 'value1', 3600);
-        self::assertEquals('value1', $hierarchialFileStore->get($stringableKey1));
+        static::assertEquals('value1', $hierarchialFileStore->get($stringableKey1));
         $hierarchialFileStore->forget('stringable1|subkey1');
-        self::assertNull($hierarchialFileStore->get($stringableKey1));
+        static::assertNull($hierarchialFileStore->get($stringableKey1));
 
         if (PHP_VERSION_ID >= 80000) {
             $stringableKey2 = new StringableTestClassPhp8('stringable2|subkey1|sskey1|ssskey1');
             $hierarchialFileStore->put($stringableKey2, 'value1', 3600);
-            self::assertEquals('value1', $hierarchialFileStore->get($stringableKey2));
+            static::assertEquals('value1', $hierarchialFileStore->get($stringableKey2));
             $hierarchialFileStore->forget('stringable2|subkey1');
-            self::assertNull($hierarchialFileStore->get($stringableKey2));
+            static::assertNull($hierarchialFileStore->get($stringableKey2));
         }
 
         $hierarchialFileStore->flush();
@@ -564,6 +568,62 @@ class AlternativeLaravelCacheTest extends TestCase
         }
     }
 
+    public function testFilesTouch(): void
+    {
+        /** @var AlternativeFileCacheStore|Repository $fileStore */
+        $fileStore = $this->getCache()->store('file');
+        $fileStore->flush();
+        $key1 = 'key1';
+        $fileStore->put($key1, 'value1', 3600);
+        static::assertEquals('value1', $fileStore->get($key1));
+        $success = $fileStore->touch($key1, 7200);
+        static::assertTrue($success);
+        static::assertEquals('value1', $fileStore->get($key1));
+        $item = $fileStore->getWrappedConnection()->getItem($fileStore->itemKey($key1));
+        static::assertEquals('value1', $item->get());
+        static::assertGreaterThanOrEqual(time() + 7100, $item->getExpirationTimestamp());
+        static::assertLessThanOrEqual(time() + 7300, $item->getExpirationTimestamp());
+    }
+
+    public function testRedisTouch(): void
+    {
+        /** @var AlternativeRedisCacheStore|Repository $redisStore */
+        $redisStore = $this->getCache()->store('redis');
+        $redisStore->flush();
+        $key1 = 'key1';
+        $redisStore->put($key1, 'value1', 3600);
+        static::assertEquals('value1', $redisStore->get($key1));
+        $success = $redisStore->touch($key1, 7200);
+        static::assertTrue($success);
+        static::assertEquals('value1', $redisStore->get($key1));
+        $item = $redisStore->getWrappedConnection()->getItem($redisStore->itemKey($key1));
+        static::assertEquals('value1', $item->get());
+        static::assertGreaterThanOrEqual(time() + 7100, $item->getExpirationTimestamp());
+        static::assertLessThanOrEqual(time() + 7300, $item->getExpirationTimestamp());
+    }
+
+    public function testMemcachedTouch(): void
+    {
+        /** @noinspection ClassConstantCanBeUsedInspection */
+        if (class_exists('\Memcached')) {
+            /** @var AlternativeMemcachedCacheStore|Repository $memcachedStore */
+            $memcachedStore = $this->getCache()->store('memcached');
+            $memcachedStore->flush();
+            $key1 = 'key1';
+            $memcachedStore->put($key1, 'value1', 3600);
+            static::assertEquals('value1', $memcachedStore->get($key1));
+            $success = $memcachedStore->touch($key1, 7200);
+            static::assertTrue($success);
+            static::assertEquals('value1', $memcachedStore->get($key1));
+            $item = $memcachedStore->getWrappedConnection()->getItem($memcachedStore->itemKey($key1));
+            static::assertEquals('value1', $item->get());
+            static::assertGreaterThanOrEqual(time() + 7100, $item->getExpirationTimestamp());
+            static::assertLessThanOrEqual(time() + 7300, $item->getExpirationTimestamp());
+        }
+    }
+
+
+
     public function testRedisKeysCreation(): void
     {
         /** @var AlternativeRedisCacheStoreWithLocks|Repository $redisStore */
@@ -573,10 +633,10 @@ class AlternativeLaravelCacheTest extends TestCase
 
         $key1 = 'key1';
         $redisStore->put($key1, 'value1', 3600);
-        self::assertEquals('value1', $redisStore->get($key1));
+        static::assertEquals('value1', $redisStore->get($key1));
         $keySha1 = sha1(str_replace('|', '!!!', 'root' . $redisStore->itemKey($key1) . '|'));
         //something like 'alternative_laravel_cache_test_database_13737195f3252a099b3ced6a237d2a128ccdac61'
-        $this->assertEquals([config('database.redis.options.prefix') . $keySha1], $this->getRedisKeys());
+        static::assertEquals([config('database.redis.options.prefix') . $keySha1], $this->getRedisKeys());
     }
 
     private function getRedisKeys(): array

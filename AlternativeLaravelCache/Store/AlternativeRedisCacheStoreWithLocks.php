@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace AlternativeLaravelCache\Store;
 
 use Illuminate\Cache\RedisLock;
+use Illuminate\Contracts\Cache\CanFlushLocks;
 use Illuminate\Contracts\Cache\Lock;
+use Illuminate\Contracts\Cache\LockProvider;
 
-class AlternativeRedisCacheStoreWithLocks extends AlternativeRedisCacheStore
+class AlternativeRedisCacheStoreWithLocks extends AlternativeRedisCacheStore implements LockProvider, CanFlushLocks
 {
     /**
      * The name of the connection that should be used for locks.
@@ -42,7 +44,7 @@ class AlternativeRedisCacheStoreWithLocks extends AlternativeRedisCacheStore
     /**
      * Get a lock instance.
      */
-    public function lock(string $name, int $seconds = 0, ?string $owner = null): Lock
+    public function lock($name, $seconds = 0, $owner = null): Lock
     {
         return new RedisLock($this->lockConnection(), $this->prefix . $name, $seconds, $owner);
     }
@@ -50,8 +52,36 @@ class AlternativeRedisCacheStoreWithLocks extends AlternativeRedisCacheStore
     /**
      * Restore a lock instance using the owner identifier.
      */
-    public function restoreLock(string $name, string $owner): Lock
+    public function restoreLock($name, $owner): Lock
     {
         return $this->lock($name, 0, $owner);
+    }
+
+    /**
+     * Remove all locks from the store.
+     *
+     * @return bool
+     *
+     * @throws \RuntimeException
+     */
+    public function flushLocks(): bool
+    {
+        if (! $this->hasSeparateLockStore()) {
+            throw new \RuntimeException('Flushing locks is only supported when the lock store is separate from the cache store.');
+        }
+
+        $this->lockConnection()->flushdb();
+
+        return true;
+    }
+
+    /**
+     * Determine if the lock store is separate from the cache store.
+     *
+     * @return bool
+     */
+    public function hasSeparateLockStore(): bool
+    {
+        return $this->lockConnection !== $this->connection;
     }
 }

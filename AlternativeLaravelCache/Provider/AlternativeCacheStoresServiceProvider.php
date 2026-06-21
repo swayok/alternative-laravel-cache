@@ -5,6 +5,8 @@ declare(strict_types=1);
 
 namespace AlternativeLaravelCache\Provider;
 
+use AlternativeLaravelCache\Store\AlternativeArrayCacheStore;
+use AlternativeLaravelCache\Store\AlternativeArrayCacheStoreWithLocks;
 use AlternativeLaravelCache\Store\AlternativeFileCacheStore;
 use AlternativeLaravelCache\Store\AlternativeFileCacheStoreWithLocks;
 use AlternativeLaravelCache\Store\AlternativeHierarchicalFileCacheStore;
@@ -24,6 +26,7 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider
 {
     protected $redisDriverName = 'redis';
     protected $memcacheDriverName = 'memcached';
+    protected $arrayDriverName = 'array';
     protected $fileDriverName = 'file';
     protected $hierarchicalFileDriverName = 'hierarchical_file';
 
@@ -51,6 +54,7 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider
         $hasLocks = trait_exists('\Illuminate\Cache\HasCacheLock');
         $this->addRedisCacheDriver($cacheManager, $hasLocks);
         $this->addMemcachedCacheDriver($cacheManager, $hasLocks);
+        $this->addArrayCacheDriver($cacheManager, $hasLocks);
         $this->addFileCacheDriver($cacheManager, $hasLocks);
         $this->addHierarchicalFileCacheDriver($cacheManager, $hasLocks);
     }
@@ -111,6 +115,25 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider
         );
     }
 
+    protected function addArrayCacheDriver(CacheManager $cacheManager, bool $hasLocks): void
+    {
+        $provider = $this;
+        $cacheManager->extend(
+            $this->arrayDriverName,
+            function (Application $app, array $cacheConfig) use ($hasLocks, $provider, $cacheManager) {
+                $serialize = $cacheConfig['serialize'] ?? false;
+                $serializableClasses = $this->app['config']['cache.serializable_classes'] ?? null;
+                if ($hasLocks) {
+                    $store = new AlternativeArrayCacheStoreWithLocks($serialize, $serializableClasses);
+                } else {
+                    $store = new AlternativeArrayCacheStore($serialize, $serializableClasses);
+                }
+                $store->setLogger($app->make('log'));
+                return $cacheManager->repository($store, $cacheConfig);
+            }
+        );
+    }
+
     protected function addFileCacheDriver(CacheManager $cacheManager, bool $hasLocks): void
     {
         $provider = $this;
@@ -119,9 +142,20 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider
             function (Application $app, array $cacheConfig) use ($hasLocks, $provider, $cacheManager) {
                 $db = new Filesystem($provider->makeFileCacheAdapter($cacheConfig));
                 if ($hasLocks) {
-                    $store = new AlternativeFileCacheStoreWithLocks($db, $provider->getPrefix($cacheConfig));
+                    $store = new AlternativeFileCacheStoreWithLocks(
+                        $db,
+                        $provider->getPrefix($cacheConfig),
+                        $cacheConfig['path'],
+                        $config['permission'] ?? null,
+                    );
+                    $store->setLockDirectory($cacheConfig['lock_path'] ?? null);
                 } else {
-                    $store = new AlternativeFileCacheStore($db, $provider->getPrefix($cacheConfig));
+                    $store = new AlternativeFileCacheStore(
+                        $db,
+                        $provider->getPrefix($cacheConfig),
+                        $cacheConfig['path'],
+                        $config['permission'] ?? null,
+                    );
                 }
                 $store->setLogger($app->make('log'));
                 return $cacheManager->repository($store, $cacheConfig);

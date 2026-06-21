@@ -107,16 +107,19 @@ Add to `config/app.php`:
     
 ### Supported cache drivers
 
+- `array` - array cache with proper tagging, also supports hierarchical cache keys and locks;  
 - `redis` - redis cache with proper tagging, also supports hierarchical cache keys and locks;  
 - `memcached` - memcached cache with proper tagging, also supports hierarchical cache keys and locks;
 - `file` - simple file-based cache with proper tagging and locks;
 - `hierarchical_file` - hierarchical file-based cache with proper tagging and locks.
-This driver also supports `/` instead of `|` so you can use `/users/:uid/followers/:fid/likes` instead of `|users|:uid|followers|:fid|likes`
-as it better represents path in file system.
+
+`hierarchical_file` and `array` drivers also support `/` instead of `|` so you can use `/users/:uid/followers/:fid/likes` 
+instead of `|users|:uid|followers|:fid|likes` as it better represents path in file system.
 
 ## Pipe character `|` in cache key (hierarchical cache keys)
-Pipe character `|` for `redis`, `memcached` and `hierarchical_file` drivers works as hierarchy separator. This means that 
-cache keys that contain `|` will work as hierarchy. Detals here: http://www.php-cache.com/en/latest/hierarchy/
+Pipe character `|` for `array`, `redis`, `memcached` and `hierarchical_file` drivers works as hierarchy separator. This means that 
+cache keys that contain `|` will work as hierarchy. 
+Details here: http://www.php-cache.com/en/latest/hierarchy/
 
     // Put key with colons (treated as usual cache key)
     Cache::put('cache-key:something:something-else', 'value', now()->addHours(6));
@@ -144,8 +147,10 @@ cache keys that contain `|` will work as hierarchy. Detals here: http://www.php-
     null
 
 ## Slash character `/` in cache key
-Slash character `/` for `hierarchical_file` driver works as hierarchy separator like pipe character `|`.
+Slash character `/` for `hierarchical_file` and `array` driver works as hierarchy separator like pipe character `|`.
 This was added to mimic folder structure.
+
+Under the hood `/` is automatically converted to `|`, so `/users/12` key is equal to `|users|12`.
 
 ### `permissions` configuration parameter for file-based cache drivers (`config/cache.php`)
 
@@ -169,10 +174,11 @@ and merged with default permissions. There are 2 types: `public` and `private`
 but only `public` permissions will be used in `AlternativeLaravelCache`.
 
 ## Notes
-By default, service provider will replace Laravel's `redis` and `file` cache stores. 
+By default, service provider will replace Laravel's `array`, `redis` and `file` cache stores. 
 You can alter this behavior like this:
 
     class MyAlternativeCacheStoresServiceProvider extends AlternativeCacheStoresServiceProvider {
+        static protected $arrayDriverName = 'altarray';
         static protected $redisDriverName = 'altredis';
         static protected $memcacheDriverName = 'altmemcached';
         static protected $fileDriverName = 'altfile';

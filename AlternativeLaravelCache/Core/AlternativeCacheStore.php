@@ -293,7 +293,7 @@ abstract class AlternativeCacheStore extends TaggableStore
     public function forget($key)
     {
         $this->_pullTags();
-        return (bool)$this->getWrappedConnection()->deleteItem($this->itemKey($key));
+        return $this->getWrappedConnection()->deleteItem($this->itemKey($key));
     }
 
     /**

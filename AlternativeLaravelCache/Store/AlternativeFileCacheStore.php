@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace AlternativeLaravelCache\Store;
 
 use AlternativeLaravelCache\Core\AlternativeCacheStore;
-use Cache\Adapter\Common\AbstractCachePool;
-use Cache\Adapter\Filesystem\FilesystemCachePool;
-use Cache\TagInterop\TaggableCacheItemPoolInterface;
+use AlternativeLaravelCache\Vendors\Common\AbstractCachePool;
+use AlternativeLaravelCache\Vendors\FileSystem\FilesystemCachePool;
+use AlternativeLaravelCache\Vendors\TagInterop\TaggableCacheItemPoolInterface;
 use League\Flysystem\Filesystem;
 
 class AlternativeFileCacheStore extends AlternativeCacheStore {

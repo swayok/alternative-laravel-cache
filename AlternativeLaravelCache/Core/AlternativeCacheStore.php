@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace AlternativeLaravelCache\Core;
 
-use Cache\Adapter\Common\AbstractCachePool;
-use Cache\Adapter\Common\CacheItem;
-use Cache\Adapter\Common\PhpCacheItem;
-use Cache\Hierarchy\HierarchicalPoolInterface;
-use Cache\TagInterop\TaggableCacheItemPoolInterface;
+use AlternativeLaravelCache\Vendors\Common\AbstractCachePool;
+use AlternativeLaravelCache\Vendors\Common\CacheItem;
+use AlternativeLaravelCache\Vendors\Common\Exception\InvalidArgumentException;
+use AlternativeLaravelCache\Vendors\Common\PhpCacheItem;
+use AlternativeLaravelCache\Vendors\Hierarchy\HierarchicalPoolInterface;
+use AlternativeLaravelCache\Vendors\TagInterop\TaggableCacheItemPoolInterface;
 use Illuminate\Cache\TaggableStore;
 use Illuminate\Cache\TaggedCache;
 use Psr\Log\LoggerInterface;
@@ -172,6 +173,7 @@ abstract class AlternativeCacheStore extends TaggableStore
      *
      * @return bool
      * @throws \Psr\Cache\InvalidArgumentException
+     * @noinspection PhpParameterNameChangedDuringInheritanceInspection
      */
     public function put($key, $value, $ttl)
     {
@@ -188,6 +190,7 @@ abstract class AlternativeCacheStore extends TaggableStore
      *
      * @return bool
      * @throws \Psr\Cache\InvalidArgumentException
+     * @noinspection PhpParameterNameChangedDuringInheritanceInspection
      */
     public function putMany(array $values, $ttl)
     {
@@ -435,7 +438,7 @@ abstract class AlternativeCacheStore extends TaggableStore
      * @param array|string $names
      *
      * @return AlternativeTaggedCache|TaggedCache
-     * @throws \Psr\Cache\InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function tags($names)
     {
@@ -443,7 +446,7 @@ abstract class AlternativeCacheStore extends TaggableStore
             $names = [$names];
         }
         if (!is_array($names)) {
-            throw new \Cache\Adapter\Common\Exception\InvalidArgumentException(
+            throw new InvalidArgumentException(
                 '$names argument should be array or string'
             );
         }

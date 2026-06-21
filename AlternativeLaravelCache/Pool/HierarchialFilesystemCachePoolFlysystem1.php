@@ -7,11 +7,11 @@ declare(strict_types=1);
 
 namespace AlternativeLaravelCache\Pool;
 
-use Cache\Adapter\Common\AbstractCachePool;
-use Cache\Adapter\Common\Exception\CachePoolException;
-use Cache\Adapter\Common\PhpCacheItem;
-use Cache\Hierarchy\HierarchicalCachePoolTrait;
-use Cache\Hierarchy\HierarchicalPoolInterface;
+use AlternativeLaravelCache\Vendors\Common\AbstractCachePool;
+use AlternativeLaravelCache\Vendors\Common\Exception\CachePoolException;
+use AlternativeLaravelCache\Vendors\Common\PhpCacheItem;
+use AlternativeLaravelCache\Vendors\Hierarchy\HierarchicalCachePoolTrait;
+use AlternativeLaravelCache\Vendors\Hierarchy\HierarchicalPoolInterface;
 use League\Flysystem\FileNotFoundException;
 use League\Flysystem\RootViolationException;
 use League\Flysystem\FileExistsException;
@@ -50,6 +50,7 @@ class HierarchialFilesystemCachePoolFlysystem1 extends AbstractCachePool impleme
      * @throws FileExistsException
      * @throws FileNotFoundException
      * @throws \InvalidArgumentException
+     * @noinspection PhpParameterNameChangedDuringInheritanceInspection
      */
     protected function getDirectValue($key): ?string
     {
@@ -151,6 +152,7 @@ class HierarchialFilesystemCachePoolFlysystem1 extends AbstractCachePool impleme
             $this->filesystem->write($file, serialize([]));
         }
 
+        /** @noinspection UnserializeExploitsInspection */
         return unserialize($this->filesystem->read($file));
     }
 

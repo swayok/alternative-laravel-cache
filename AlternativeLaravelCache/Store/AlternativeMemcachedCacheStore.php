@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace AlternativeLaravelCache\Store;
 
 use AlternativeLaravelCache\Core\AlternativeCacheStore;
-use Cache\Adapter\Common\AbstractCachePool;
-use Cache\Adapter\Memcached\MemcachedCachePool;
-use Cache\Hierarchy\HierarchicalPoolInterface;
+use AlternativeLaravelCache\Vendors\Common\AbstractCachePool;
+use AlternativeLaravelCache\Vendors\Hierarchy\HierarchicalPoolInterface;
+use AlternativeLaravelCache\Vendors\Memcached\MemcachedCachePool;
 
 /**
  * @method \Memcached getDb()

@@ -49,18 +49,10 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider
     {
         $cacheManager = $this->app->make('cache');
         $hasLocks = trait_exists('\Illuminate\Cache\HasCacheLock');
-        if ($this->isRedisDriverEnabled() || $this->isPredisDriverEnabled()) {
-            $this->addRedisCacheDriver($cacheManager, $hasLocks);
-        }
-        if ($this->isMemcachedDriverEnabled()) {
-            $this->addMemcachedCacheDriver($cacheManager, $hasLocks);
-        }
-        if ($this->isFileDriverEnabled()) {
-            $this->addFileCacheDriver($cacheManager, $hasLocks);
-            if ($this->isHierarchialCacheEnabled()) {
-                $this->addHierarchialFileCacheDriver($cacheManager, $hasLocks);
-            }
-        }
+        $this->addRedisCacheDriver($cacheManager, $hasLocks);
+        $this->addMemcachedCacheDriver($cacheManager, $hasLocks);
+        $this->addFileCacheDriver($cacheManager, $hasLocks);
+        $this->addHierarchicalFileCacheDriver($cacheManager, $hasLocks);
     }
 
     protected function addRedisCacheDriver(CacheManager $cacheManager, bool $hasLocks): void
@@ -137,7 +129,7 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider
         );
     }
 
-    protected function addHierarchialFileCacheDriver(CacheManager $cacheManager, bool $hasLocks): void
+    protected function addHierarchicalFileCacheDriver(CacheManager $cacheManager, bool $hasLocks): void
     {
         $provider = $this;
         $cacheManager->extend(
@@ -210,36 +202,6 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider
             }
         }
         return $permissionsMap;
-    }
-
-    protected function isFileDriverEnabled(): bool
-    {
-        /** @noinspection ClassConstantCanBeUsedInspection */
-        return class_exists('\Cache\Adapter\Filesystem\FilesystemCachePool');
-    }
-
-    protected function isHierarchialCacheEnabled(): bool
-    {
-        /** @noinspection ClassConstantCanBeUsedInspection */
-        return interface_exists('\Cache\Hierarchy\HierarchicalPoolInterface');
-    }
-
-    protected function isRedisDriverEnabled(): bool
-    {
-        /** @noinspection ClassConstantCanBeUsedInspection */
-        return class_exists('\Cache\Adapter\Redis\RedisCachePool');
-    }
-
-    protected function isPredisDriverEnabled(): bool
-    {
-        /** @noinspection ClassConstantCanBeUsedInspection */
-        return class_exists('\Cache\Adapter\Predis\PredisCachePool');
-    }
-
-    protected function isMemcachedDriverEnabled(): bool
-    {
-        /** @noinspection ClassConstantCanBeUsedInspection */
-        return class_exists('\Cache\Adapter\Memcached\MemcachedCachePool');
     }
 
     /**

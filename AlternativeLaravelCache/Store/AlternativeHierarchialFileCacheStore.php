@@ -7,9 +7,9 @@ namespace AlternativeLaravelCache\Store;
 use AlternativeLaravelCache\Core\AlternativeCacheStore;
 use AlternativeLaravelCache\Pool\HierarchialFilesystemCachePoolFlysystem1;
 use AlternativeLaravelCache\Pool\HierarchialFilesystemCachePoolFlysystem3;
-use Cache\Adapter\Common\AbstractCachePool;
-use Cache\Hierarchy\HierarchicalPoolInterface;
-use Cache\TagInterop\TaggableCacheItemPoolInterface;
+use AlternativeLaravelCache\Vendors\Common\AbstractCachePool;
+use AlternativeLaravelCache\Vendors\Hierarchy\HierarchicalPoolInterface;
+use AlternativeLaravelCache\Vendors\TagInterop\TaggableCacheItemPoolInterface;
 use League\Flysystem\Filesystem;
 
 class AlternativeHierarchialFileCacheStore extends AlternativeCacheStore

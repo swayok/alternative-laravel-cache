@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace AlternativeLaravelCache\Store;
 
 use AlternativeLaravelCache\Core\AlternativeCacheStore;
-use Cache\Adapter\Common\AbstractCachePool;
-use Cache\Adapter\Predis\PredisCachePool;
-use Cache\Adapter\Redis\RedisCachePool;
-use Cache\Hierarchy\HierarchicalPoolInterface;
+use AlternativeLaravelCache\Vendors\Common\AbstractCachePool;
+use AlternativeLaravelCache\Vendors\Hierarchy\HierarchicalPoolInterface;
+use AlternativeLaravelCache\Vendors\Redis\RedisCachePool;
+use AlternativeLaravelCache\Vendors\Redis\PredisCachePool;
 use Illuminate\Redis\RedisManager;
 
 /**

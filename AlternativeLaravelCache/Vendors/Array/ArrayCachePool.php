@@ -29,31 +29,40 @@ class ArrayCachePool extends AbstractCachePool implements HierarchicalPoolInterf
     /**
      * @type PhpCacheItem[]
      */
-    private $cache;
+    private array $cache = [];
 
     /**
      * @type array A map to hold keys
      */
-    private $keyMap = [];
+    private array $keyMap = [];
 
     /**
      * @type int The maximum number of keys in the map
      */
-    private $limit;
+    private ?int $limit = null;
 
     /**
      * @type int The next key that we should remove from the cache
      */
-    private $currentPosition = 0;
+    private int $currentPosition = 0;
 
     /**
      * @param int $limit the amount if items stored in the cache. Using a limit will reduce memory leaks.
      * @param array $cache
      */
-    public function __construct($limit = null, array &$cache = [])
+    public function __construct(?int $limit = null, array $cache = [])
     {
-        $this->cache = &$cache;
+        $this->cache = $cache;
         $this->limit = $limit;
+    }
+
+    /**
+     * Get all cache.
+     * @return array
+     */
+    public function getCache(): array
+    {
+        return $this->cache;
     }
 
     /**
@@ -242,7 +251,11 @@ class ArrayCachePool extends AbstractCachePool implements HierarchicalPoolInterf
         $array = $this->cache;
 
         foreach ($keys as $key) {
-            if ($has = array_key_exists($key, $array)) {
+            $has = (
+                $array !== null
+                && array_key_exists($key, $array)
+            );
+            if (array_key_exists($key, $array)) {
                 $array = $array[$key];
             }
         }

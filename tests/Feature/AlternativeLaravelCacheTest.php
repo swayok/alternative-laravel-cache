@@ -673,6 +673,14 @@ class AlternativeLaravelCacheTest extends TestCase
         $arrayStore->forget('stringable1|subkey1');
         static::assertNull($arrayStore->get($stringableKey1));
 
+        // key that does not exist
+        $notExistingKey1 = '|test|non_existing_key';
+        static::assertNull($arrayStore->get($notExistingKey1));
+        static::assertFalse($arrayStore->has($notExistingKey1));
+        $notExistingKey2 = '/test/non_existing_key';
+        static::assertNull($arrayStore->get($notExistingKey2));
+        static::assertFalse($arrayStore->has($notExistingKey2));
+
         if (PHP_VERSION_ID >= 80000) {
             $stringableKey2 = new StringableTestClassPhp8('stringable2|subkey1|sskey1|ssskey1');
             $arrayStore->put($stringableKey2, 'value1', 3600);

@@ -255,7 +255,7 @@ class ArrayCachePool extends AbstractCachePool implements HierarchicalPoolInterf
                 $array !== null
                 && array_key_exists($key, $array)
             );
-            if (array_key_exists($key, $array)) {
+            if ($has) {
                 $array = $array[$key];
             }
         }

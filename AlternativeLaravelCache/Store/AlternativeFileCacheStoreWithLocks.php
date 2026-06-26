@@ -5,11 +5,10 @@ declare(strict_types=1);
 namespace AlternativeLaravelCache\Store;
 
 use Illuminate\Cache\FileLock;
-use Illuminate\Contracts\Cache\CanFlushLocks;
 use Illuminate\Contracts\Cache\LockProvider;
 use Symfony\Component\Finder\Finder;
 
-class AlternativeFileCacheStoreWithLocks extends AlternativeFileCacheStore implements LockProvider, CanFlushLocks
+class AlternativeFileCacheStoreWithLocks extends AlternativeFileCacheStore implements LockProvider
 {
     /**
      * Get a lock instance.

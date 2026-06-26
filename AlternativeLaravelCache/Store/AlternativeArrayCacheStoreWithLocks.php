@@ -5,11 +5,9 @@ declare(strict_types=1);
 namespace AlternativeLaravelCache\Store;
 
 use Illuminate\Cache\ArrayLock;
-use Illuminate\Contracts\Cache\CanFlushLocks;
 use Illuminate\Contracts\Cache\LockProvider;
-use Illuminate\Support\Carbon;
 
-class AlternativeArrayCacheStoreWithLocks extends AlternativeArrayCacheStore implements LockProvider, CanFlushLocks
+class AlternativeArrayCacheStoreWithLocks extends AlternativeArrayCacheStore implements LockProvider
 {
     /**
      * The array of locks.

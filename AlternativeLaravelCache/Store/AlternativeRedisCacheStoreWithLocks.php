@@ -5,11 +5,10 @@ declare(strict_types=1);
 namespace AlternativeLaravelCache\Store;
 
 use Illuminate\Cache\RedisLock;
-use Illuminate\Contracts\Cache\CanFlushLocks;
 use Illuminate\Contracts\Cache\Lock;
 use Illuminate\Contracts\Cache\LockProvider;
 
-class AlternativeRedisCacheStoreWithLocks extends AlternativeRedisCacheStore implements LockProvider, CanFlushLocks
+class AlternativeRedisCacheStoreWithLocks extends AlternativeRedisCacheStore implements LockProvider
 {
     /**
      * The name of the connection that should be used for locks.

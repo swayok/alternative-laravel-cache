@@ -39,6 +39,105 @@ abstract class AbstractCachePool implements PhpCachePool, LoggerAwareInterface, 
     protected $deferred = [];
 
     /**
+     * Classes allowed during unserialization (see `allowed_classes` option of unserialize()).
+     * null = no restrictions.
+     *
+     * @var array|bool|null
+     */
+    protected $serializableClasses = null;
+
+    /**
+     * @param array|bool|null $serializableClasses
+     */
+    public function setSerializableClasses($serializableClasses): void
+    {
+        $this->serializableClasses = $serializableClasses;
+    }
+
+    /**
+     * Base classes/interfaces: any class that extends/implements one of them is allowed during
+     * unserialization in addition to $serializableClasses. Has no effect when $serializableClasses
+     * is null or true (nothing is restricted then).
+     *
+     * @var string[]
+     */
+    protected $serializableBaseClasses = [];
+
+    /**
+     * @var array<string, bool> class name => is allowed by base classes
+     */
+    private $baseClassMatches = [];
+
+    /**
+     * @param string[] $serializableBaseClasses
+     */
+    public function setSerializableBaseClasses(array $serializableBaseClasses): void
+    {
+        $this->serializableBaseClasses = array_values($serializableBaseClasses);
+        $this->baseClassMatches = [];
+    }
+
+    /**
+     * @return mixed
+     */
+    protected function unserializeValue($value)
+    {
+        if ($this->serializableClasses === null) {
+            /** @noinspection UnserializeExploitsInspection */
+            return unserialize($value);
+        }
+
+        $allowed = $this->serializableClasses;
+        if (!empty($this->serializableBaseClasses) && $allowed !== true) {
+            $allowed = array_values(array_unique(array_merge(
+                is_array($allowed) ? $allowed : [],
+                $this->findClassesMatchingBaseClasses((string)$value)
+            )));
+        }
+
+        return unserialize($value, ['allowed_classes' => $allowed]);
+    }
+
+    /**
+     * Collects class names used in serialized string that extend/implement one of serializableBaseClasses.
+     * Names are only added to the allow-list when they are objects/enums of an allowed hierarchy, so a
+     * crafted string cannot allow anything outside of the configured base classes.
+     *
+     * @return string[]
+     */
+    private function findClassesMatchingBaseClasses(string $serialized): array
+    {
+        if (!preg_match_all('%\b[OCE]:\d+:"([^"]+)"%', $serialized, $matches)) {
+            return [];
+        }
+        $found = [];
+        foreach (array_unique($matches[1]) as $name) {
+            // enums are serialized as E:<len>:"Class:Case"
+            $class = strpos($name, ':') !== false ? substr($name, 0, (int)strpos($name, ':')) : $name;
+            if (!isset($this->baseClassMatches[$class])) {
+                $this->baseClassMatches[$class] = $this->isSubclassOfBaseClasses($class);
+            }
+            if ($this->baseClassMatches[$class]) {
+                $found[] = $class;
+            }
+        }
+        return $found;
+    }
+
+    private function isSubclassOfBaseClasses(string $class): bool
+    {
+        if (!preg_match('%^[A-Za-z_\x80-\xff][A-Za-z0-9_\x80-\xff]*(\\\\[A-Za-z_\x80-\xff][A-Za-z0-9_\x80-\xff]*)*$%', $class)) {
+            return false;
+        }
+        foreach ($this->serializableBaseClasses as $baseClass) {
+            if (is_a($class, $baseClass, true)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * @param PhpCacheItem $item
      * @param int|null     $ttl  seconds from now
      *

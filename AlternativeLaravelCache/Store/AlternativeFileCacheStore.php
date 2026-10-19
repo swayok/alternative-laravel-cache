@@ -49,6 +49,13 @@ class AlternativeFileCacheStore extends AlternativeCacheStore
     protected array | bool | null $serializableClasses = true;
 
     /**
+     * Classes/interfaces whose subclasses are allowed during unserialization.
+     *
+     * @var string[]
+     */
+    protected array $serializableBaseClasses = [];
+
+    /**
      * Create a new file cache store instance.
      *
      * @param Filesystem $db
@@ -57,6 +64,7 @@ class AlternativeFileCacheStore extends AlternativeCacheStore
      * @param int|null $filePermission
      * @param array|bool|null $serializableClasses
      * @param int $directoryPermission
+     * @param string[] $serializableBaseClasses
      */
     public function __construct(
         $db,
@@ -64,13 +72,15 @@ class AlternativeFileCacheStore extends AlternativeCacheStore
         $directory,
         $filePermission = null,
         $serializableClasses = true,
-        $directoryPermission = 0755
+        $directoryPermission = 0755,
+        array $serializableBaseClasses = []
     ) {
         parent::__construct($db, $prefix);
         $this->directory = $directory ?? 'cache';
         $this->filePermission = $filePermission;
         $this->serializableClasses = $serializableClasses;
         $this->directoryPermission = $directoryPermission;
+        $this->serializableBaseClasses = $serializableBaseClasses;
     }
 
     /**
@@ -80,12 +90,16 @@ class AlternativeFileCacheStore extends AlternativeCacheStore
      */
     public function wrapConnection()
     {
-        return new FilesystemCachePool(
+        $pool = new FilesystemCachePool(
             $this->getDb(),
             $this->getDirectory(),
             $this->filePermission,
             $this->directoryPermission
         );
+        $pool->setSerializableClasses($this->serializableClasses);
+        $pool->setSerializableBaseClasses($this->serializableBaseClasses);
+
+        return $pool;
     }
 
     /**

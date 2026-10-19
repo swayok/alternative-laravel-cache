@@ -159,19 +159,76 @@ Under the hood `/` is automatically converted to `|`, so `/users/12` key is equa
             'driver' => 'file',
             'path' => storage_path('framework/cache/data'),
             'permissions' => [
-                'file' => [
-                    'public' => 0644,
-                ],
-                'dir' => [
-                    'public' => 0755,
-                ],
+                'file' => 0644,
+                'dir' => 0755,
             ]
         ],
     ],
 
-These permissions passed to `vendor/league/flysystem/src/Adapter/Local.php`
-and merged with default permissions. There are 2 types: `public` and `private`
-but only `public` permissions will be used in `AlternativeLaravelCache`.
+`file` is applied to cache files with `chmod` after they are written, `dir` is used when cache directories are created.
+Both are merged with defaults (`0644` for files, `0755` for directories). Use plain octal integers as shown above.
+Laravel's native `permission` option (single integer for files) is also supported and takes precedence over `permissions.file`.
+
+## Restricting classes allowed during unserialization (`serializable_classes` and `serializable_base_classes`)
+
+Cached values are stored serialized, and unserializing untrusted data can instantiate arbitrary classes (PHP object injection).
+Laravel 12+ provides `cache.serializable_classes` to limit which classes may be restored from the cache.
+This lib supports it and adds `cache.serializable_base_classes` to allow whole class hierarchies.
+
+Supported by drivers: `redis`, `memcached`, `file`, `hierarchical_file` (including their variants with locks).
+The `array` driver does not apply these settings.
+
+### `serializable_classes`
+
+    // config/cache.php
+    'serializable_classes' => [
+        App\Data\Money::class,
+        App\Data\Address::class,
+    ],
+
+| Value | Behavior                                                                                   |
+|-------|--------------------------------------------------------------------------------------------|
+| `null` or not set | No restrictions (same as before this setting existed).                         |
+| `true` | All classes are allowed.                                                                  |
+| `false` | No classes are allowed. Scalars and arrays still work.                                   |
+| `array` | Only listed classes are allowed (exact class names).                                     |
+
+A class that is not allowed is not instantiated. PHP returns an `__PHP_Incomplete_Class` object in its place instead.
+This is PHP's `allowed_classes` option of `unserialize()`, which matches **exact class names only**.
+Listing `Illuminate\Database\Eloquent\Model` there will **not** allow `App\Models\User`.
+
+### `serializable_base_classes`
+
+To allow a class and everything that extends or implements it, list it here:
+
+    // config/cache.php
+    'serializable_classes' => false,
+    'serializable_base_classes' => [
+        Illuminate\Database\Eloquent\Model::class,
+        Illuminate\Support\Collection::class,
+        Stringable::class,
+    ],
+
+Now `App\Models\User` (extends `Model`) and any other model can be restored from the cache, while all other classes stay blocked.
+Entries can be classes or interfaces.
+
+How it works:
+
+1. Before unserializing, the cache pool scans the stored string for serialized class names (`O:`, `C:` and enum `E:` entries).
+2. Each found class name is checked with `is_a($class, $baseClass, true)` against every class listed in `serializable_base_classes`.
+3. Matching classes are added to the allow-list built from `serializable_classes`, and the result is passed to `unserialize()` as `allowed_classes`.
+4. Results are remembered per class name for the lifetime of the cache pool, so each class is checked once.
+
+Things to know:
+
+- `serializable_base_classes` only has an effect when `serializable_classes` is `false` or an array.
+  With `null` or `true` nothing is restricted, so the base list is ignored.
+- Only class names that match a base class are added to the allow-list, so a cached string that merely looks like a
+  serialized object cannot allow anything outside of your base classes.
+- Checking a class name with `is_a()` makes PHP's autoloader try to load it. Names that are not valid class names are
+  skipped before that, but keep this in mind if untrusted data can reach your cache.
+- Broad base classes allow broad hierarchies. Eloquent models have magic methods, so prefer a small, specific list.
+- Existing cache entries do not need to be rewritten: the setting affects only how values are read.
 
 ## Notes
 By default, service provider will replace Laravel's `array`, `redis` and `file` cache stores. 
@@ -184,6 +241,6 @@ You can alter this behavior like this:
         static protected $fileDriverName = 'altfile';
     }
     
-File cache storage currently supports only `'driver' => 'file'`. You can extend list of file cache drivers by  
-overwriting `AlternativeCacheStoresServiceProvider->makeFileCacheAdapter()`.
+File cache drivers use Laravel's `Illuminate\Filesystem\Filesystem` (the `files` binding) and work with local paths only,
+like Laravel's native file cache.
 

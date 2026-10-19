@@ -108,8 +108,7 @@ class HierarchicalFilesystemCachePool extends AbstractCachePool implements Hiera
             return [false, null, []];
         }
 
-        /** @noinspection UnserializeExploitsInspection */
-        $data = unserialize($contents);
+        $data = $this->unserializeValue($contents);
         if ($data[0] !== null && time() > $data[0]) {
             foreach ($data[2] as $tag) {
                 $this->removeListItem($this->getTagKey($tag), $key);
@@ -132,8 +131,7 @@ class HierarchicalFilesystemCachePool extends AbstractCachePool implements Hiera
             $this->writeFile($file, serialize([]));
         }
 
-        /** @noinspection UnserializeExploitsInspection */
-        return unserialize($this->readFile($file) ?? serialize([]));
+        return $this->unserializeValue($this->readFile($file) ?? serialize([]));
     }
 
     /**

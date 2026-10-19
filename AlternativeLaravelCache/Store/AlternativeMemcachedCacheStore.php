@@ -22,13 +22,50 @@ class AlternativeMemcachedCacheStore extends AlternativeCacheStore
     protected $db;
 
     /**
+     * The classes that should be allowed during unserialization.
+     *
+     * @var array|bool|null
+     */
+    protected $serializableClasses;
+
+    /**
+     * Classes/interfaces whose subclasses are allowed during unserialization.
+     *
+     * @var string[]
+     */
+    protected $serializableBaseClasses = [];
+
+    /**
+     * @param \Memcached $db
+     * @param string $prefix
+     * @param string|null $connection
+     * @param array|bool|null $serializableClasses
+     * @param string[] $serializableBaseClasses
+     */
+    public function __construct(
+        $db,
+        $prefix,
+        $connection = null,
+        $serializableClasses = null,
+        array $serializableBaseClasses = []
+    ) {
+        parent::__construct($db, $prefix, $connection);
+        $this->serializableClasses = $serializableClasses;
+        $this->serializableBaseClasses = $serializableBaseClasses;
+    }
+
+    /**
      * Wrap connection with MemcachedCachePool
      *
      * @return MemcachedCachePool|AbstractCachePool
      */
     public function wrapConnection()
     {
-        return new MemcachedCachePool($this->getDb());
+        $pool = new MemcachedCachePool($this->getDb());
+        $pool->setSerializableClasses($this->serializableClasses);
+        $pool->setSerializableBaseClasses($this->serializableBaseClasses);
+
+        return $pool;
     }
 
     /**

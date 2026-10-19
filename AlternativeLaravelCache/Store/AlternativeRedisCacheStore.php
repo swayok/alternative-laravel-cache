@@ -24,6 +24,39 @@ class AlternativeRedisCacheStore extends AlternativeCacheStore
     protected $db;
 
     /**
+     * The classes that should be allowed during unserialization.
+     *
+     * @var array|bool|null
+     */
+    protected $serializableClasses;
+
+    /**
+     * Classes/interfaces whose subclasses are allowed during unserialization.
+     *
+     * @var string[]
+     */
+    protected $serializableBaseClasses = [];
+
+    /**
+     * @param RedisManager $db
+     * @param string $prefix
+     * @param string|null $connection
+     * @param array|bool|null $serializableClasses
+     * @param string[] $serializableBaseClasses
+     */
+    public function __construct(
+        $db,
+        $prefix,
+        $connection = null,
+        $serializableClasses = null,
+        array $serializableBaseClasses = []
+    ) {
+        parent::__construct($db, $prefix, $connection);
+        $this->serializableClasses = $serializableClasses;
+        $this->serializableBaseClasses = $serializableBaseClasses;
+    }
+
+    /**
      * Wrap connection with PredisCachePool or RedisCachePool
      *
      * @return PredisCachePool|RedisCachePool|AbstractCachePool
@@ -32,10 +65,14 @@ class AlternativeRedisCacheStore extends AlternativeCacheStore
     {
         if ($this->isPhpRedis()) {
             // PHPRedis extension client
-            return new RedisCachePool($this->getConnection());
+            $pool = new RedisCachePool($this->getConnection());
+        } else {
+            $pool = new PredisCachePool($this->getConnection());
         }
+        $pool->setSerializableClasses($this->serializableClasses);
+        $pool->setSerializableBaseClasses($this->serializableBaseClasses);
 
-        return new PredisCachePool($this->getConnection());
+        return $pool;
     }
 
     protected function isPhpRedis(): bool

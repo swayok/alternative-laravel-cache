@@ -67,13 +67,17 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider
                     $store = new AlternativeRedisCacheStoreWithLocks(
                         $app['redis'],
                         $provider->getPrefix($cacheConfig),
-                        $provider->getConnectionName($cacheConfig)
+                        $provider->getConnectionName($cacheConfig),
+                        $app['config']['cache.serializable_classes'] ?? null,
+                        $app['config']['cache.serializable_base_classes'] ?? []
                     );
                 } else {
                     $store = new AlternativeRedisCacheStore(
                         $app['redis'],
                         $provider->getPrefix($cacheConfig),
-                        $provider->getConnectionName($cacheConfig)
+                        $provider->getConnectionName($cacheConfig),
+                        $app['config']['cache.serializable_classes'] ?? null,
+                        $app['config']['cache.serializable_base_classes'] ?? []
                     );
                 }
                 $store->setLogger($app->make('log'));
@@ -98,13 +102,17 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider
                     $store = new AlternativeMemcachedCacheStoreWithLocks(
                         $memcached,
                         $provider->getPrefix($cacheConfig),
-                        $provider->getConnectionName($cacheConfig)
+                        $provider->getConnectionName($cacheConfig),
+                        $app['config']['cache.serializable_classes'] ?? null,
+                        $app['config']['cache.serializable_base_classes'] ?? []
                     );
                 } else {
                     $store = new AlternativeMemcachedCacheStore(
                         $memcached,
                         $provider->getPrefix($cacheConfig),
-                        $provider->getConnectionName($cacheConfig)
+                        $provider->getConnectionName($cacheConfig),
+                        $app['config']['cache.serializable_classes'] ?? null,
+                        $app['config']['cache.serializable_base_classes'] ?? []
                     );
                 }
                 $store->setLogger($app->make('log'));
@@ -145,8 +153,9 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider
                     $provider->getPrefix($cacheConfig),
                     $cacheConfig['path'],
                     $cacheConfig['permission'] ?? $permissions['file']['public'],
-                    true,
-                    $permissions['dir']['public']
+                    $app['config']['cache.serializable_classes'] ?? null,
+                    $permissions['dir']['public'],
+                    $app['config']['cache.serializable_base_classes'] ?? []
                 );
                 if ($hasLocks) {
                     $store->setLockDirectory($cacheConfig['lock_path'] ?? null);
@@ -172,7 +181,9 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider
                     $provider->getPrefix($cacheConfig),
                     $cacheConfig['path'],
                     $cacheConfig['permission'] ?? $permissions['file']['public'],
-                    $permissions['dir']['public']
+                    $permissions['dir']['public'],
+                    $app['config']['cache.serializable_classes'] ?? null,
+                    $app['config']['cache.serializable_base_classes'] ?? []
                 );
                 $store->setLogger($app->make('log'));
                 return $cacheManager->repository($store, $cacheConfig);

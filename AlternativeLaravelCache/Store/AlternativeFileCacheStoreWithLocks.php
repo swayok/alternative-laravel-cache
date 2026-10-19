@@ -27,7 +27,8 @@ class AlternativeFileCacheStoreWithLocks extends AlternativeFileCacheStore imple
                 $this->lockDirectory ?? $this->directory,
                 $this->filePermission,
                 $this->serializableClasses,
-                $this->directoryPermission
+                $this->directoryPermission,
+                $this->serializableBaseClasses
             ),
             "file-store-lock:{$name}",
             $seconds,

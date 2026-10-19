@@ -61,8 +61,7 @@ class FilesystemCachePool extends AbstractCachePool
             return $empty;
         }
 
-        /** @noinspection UnserializeExploitsInspection */
-        $data = @unserialize($contents);
+        $data = @$this->unserializeValue($contents);
         if ($data === false) {
             return $empty;
         }
@@ -126,8 +125,7 @@ class FilesystemCachePool extends AbstractCachePool
             $this->writeFile($file, serialize([]));
         }
 
-        /** @noinspection UnserializeExploitsInspection */
-        return unserialize($this->readFile($file) ?? serialize([]));
+        return $this->unserializeValue($this->readFile($file) ?? serialize([]));
     }
 
     protected function removeList($name)

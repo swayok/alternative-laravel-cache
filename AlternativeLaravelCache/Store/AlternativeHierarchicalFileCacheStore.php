@@ -42,23 +42,43 @@ class AlternativeHierarchicalFileCacheStore extends AlternativeCacheStore
     protected $directoryPermission;
 
     /**
+     * The classes that should be allowed during unserialization.
+     *
+     * @var array|bool|null
+     */
+    protected $serializableClasses;
+
+    /**
+     * Classes/interfaces whose subclasses are allowed during unserialization.
+     *
+     * @var string[]
+     */
+    protected $serializableBaseClasses = [];
+
+    /**
      * @param Filesystem $db
      * @param string $prefix
      * @param string $directory
      * @param int|null $filePermission
      * @param int $directoryPermission
+     * @param array|bool|null $serializableClasses
+     * @param string[] $serializableBaseClasses
      */
     public function __construct(
         $db,
         $prefix,
         $directory,
         $filePermission = null,
-        $directoryPermission = 0755
+        $directoryPermission = 0755,
+        $serializableClasses = null,
+        array $serializableBaseClasses = []
     ) {
         parent::__construct($db, $prefix);
         $this->directory = $directory;
         $this->filePermission = $filePermission;
         $this->directoryPermission = $directoryPermission;
+        $this->serializableClasses = $serializableClasses;
+        $this->serializableBaseClasses = $serializableBaseClasses;
     }
 
     /**
@@ -68,12 +88,16 @@ class AlternativeHierarchicalFileCacheStore extends AlternativeCacheStore
      */
     public function wrapConnection()
     {
-        return new HierarchicalFilesystemCachePool(
+        $pool = new HierarchicalFilesystemCachePool(
             $this->getDb(),
             $this->getDirectory(),
             $this->filePermission,
             $this->directoryPermission
         );
+        $pool->setSerializableClasses($this->serializableClasses);
+        $pool->setSerializableBaseClasses($this->serializableBaseClasses);
+
+        return $pool;
     }
 
     /**

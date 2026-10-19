@@ -762,6 +762,9 @@ class AlternativeLaravelCacheTest extends TestCase
             static::assertEquals('value1', $item->get());
             static::assertGreaterThanOrEqual(time() + 7100, $item->getExpirationTimestamp());
             static::assertLessThanOrEqual(time() + 7300, $item->getExpirationTimestamp());
+        } else {
+            echo "\n!!! Memcached not installed\n\n";
+            static::assertTrue(true); // So that it will not
         }
     }
 

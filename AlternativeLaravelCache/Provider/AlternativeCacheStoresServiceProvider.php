@@ -19,8 +19,6 @@ use Illuminate\Cache\CacheManager;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Arr;
 use Illuminate\Support\ServiceProvider;
-use InvalidArgumentException;
-use League\Flysystem\Filesystem;
 
 class AlternativeCacheStoresServiceProvider extends ServiceProvider
 {
@@ -140,22 +138,18 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider
         $cacheManager->extend(
             $this->fileDriverName,
             function (Application $app, array $cacheConfig) use ($hasLocks, $provider, $cacheManager) {
-                $db = new Filesystem($provider->makeFileCacheAdapter($cacheConfig));
+                $permissions = $provider->getNormalizedPermissions($cacheConfig);
+                $storeClass = $hasLocks ? AlternativeFileCacheStoreWithLocks::class : AlternativeFileCacheStore::class;
+                $store = new $storeClass(
+                    $app['files'],
+                    $provider->getPrefix($cacheConfig),
+                    $cacheConfig['path'],
+                    $cacheConfig['permission'] ?? $permissions['file']['public'],
+                    true,
+                    $permissions['dir']['public']
+                );
                 if ($hasLocks) {
-                    $store = new AlternativeFileCacheStoreWithLocks(
-                        $db,
-                        $provider->getPrefix($cacheConfig),
-                        $cacheConfig['path'],
-                        $config['permission'] ?? null,
-                    );
                     $store->setLockDirectory($cacheConfig['lock_path'] ?? null);
-                } else {
-                    $store = new AlternativeFileCacheStore(
-                        $db,
-                        $provider->getPrefix($cacheConfig),
-                        $cacheConfig['path'],
-                        $config['permission'] ?? null,
-                    );
                 }
                 $store->setLogger($app->make('log'));
                 return $cacheManager->repository($store, $cacheConfig);
@@ -169,49 +163,24 @@ class AlternativeCacheStoresServiceProvider extends ServiceProvider
         $cacheManager->extend(
             $this->hierarchicalFileDriverName,
             function (Application $app, array $cacheConfig) use ($hasLocks, $provider, $cacheManager) {
-                $db = new Filesystem($provider->makeFileCacheAdapter($cacheConfig));
-                if ($hasLocks) {
-                    $store = new AlternativeHierarchicalFileCacheStoreWithLocks($db, $provider->getPrefix($cacheConfig));
-                } else {
-                    $store = new AlternativeHierarchicalFileCacheStore($db, $provider->getPrefix($cacheConfig));
-                }
+                $permissions = $provider->getNormalizedPermissions($cacheConfig);
+                $storeClass = $hasLocks
+                    ? AlternativeHierarchicalFileCacheStoreWithLocks::class
+                    : AlternativeHierarchicalFileCacheStore::class;
+                $store = new $storeClass(
+                    $app['files'],
+                    $provider->getPrefix($cacheConfig),
+                    $cacheConfig['path'],
+                    $cacheConfig['permission'] ?? $permissions['file']['public'],
+                    $permissions['dir']['public']
+                );
                 $store->setLogger($app->make('log'));
                 return $cacheManager->repository($store, $cacheConfig);
             }
         );
     }
 
-    /** @noinspection PhpFullyQualifiedNameUsageInspection */
-    public function makeFileCacheAdapter(array $cacheConfig)
-    {
-        switch (strtolower($cacheConfig['driver'])) {
-            case $this->fileDriverName:
-            case $this->hierarchicalFileDriverName:
-                $permissions = $this->getNormalizedPermissions($cacheConfig);
-                if (class_exists('League\Flysystem\Adapter\Local')) {
-                    return new \League\Flysystem\Adapter\Local(
-                        $cacheConfig['path'],
-                        LOCK_EX,
-                        \League\Flysystem\Adapter\Local::DISALLOW_LINKS,
-                        $permissions
-                    );
-                }
-
-                return new \League\Flysystem\Local\LocalFilesystemAdapter(
-                    $cacheConfig['path'],
-                    \League\Flysystem\UnixVisibility\PortableVisibilityConverter::fromArray($permissions, \League\Flysystem\Visibility::PUBLIC),
-                    LOCK_EX,
-                    \League\Flysystem\Local\LocalFilesystemAdapter::DISALLOW_LINKS
-                );
-            default:
-                throw new InvalidArgumentException(
-                    "File cache driver [{$cacheConfig['driver']}] is not supported.
-                    You can add support for drivers by overwriting " . __CLASS__ . '->makeFileCacheAdapter() method'
-                );
-        }
-    }
-
-    protected function getNormalizedPermissions(array $cacheConfig): array
+    public function getNormalizedPermissions(array $cacheConfig): array
     {
         $configPermissions = Arr::get($cacheConfig, 'permissions');
         $permissionsMap = $this->defaultPermissions;

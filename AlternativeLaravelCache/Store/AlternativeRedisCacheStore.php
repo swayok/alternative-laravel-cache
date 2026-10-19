@@ -51,10 +51,27 @@ class AlternativeRedisCacheStore extends AlternativeCacheStore
      */
     public function getConnection()
     {
-        return $this
-            ->getDb()
-            ->connection($this->connection)
-            ->client();
+        return $this->connection()->client();
+    }
+
+    /**
+     * Get the Redis connection instance.
+     *
+     * @return \Illuminate\Redis\Connections\Connection
+     */
+    public function connection()
+    {
+        return $this->getDb()->connection($this->connection);
+    }
+
+    /**
+     * Get the Redis database instance.
+     *
+     * @return RedisManager
+     */
+    public function getRedis()
+    {
+        return $this->getDb();
     }
 
     public function setPrefix(string $prefix): void

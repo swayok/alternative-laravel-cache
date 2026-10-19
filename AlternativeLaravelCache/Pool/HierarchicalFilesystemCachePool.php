@@ -9,25 +9,36 @@ use AlternativeLaravelCache\Vendors\Common\Exception\CachePoolException;
 use AlternativeLaravelCache\Vendors\Common\PhpCacheItem;
 use AlternativeLaravelCache\Vendors\Hierarchy\HierarchicalCachePoolTrait;
 use AlternativeLaravelCache\Vendors\Hierarchy\HierarchicalPoolInterface;
-use AlternativeLaravelCache\Vendors\TagInterop\TaggableCacheItemInterface;
-use League\Flysystem\Filesystem;
+use Illuminate\Contracts\Filesystem\FileNotFoundException;
+use Illuminate\Filesystem\Filesystem;
 use Psr\Cache\CacheItemInterface;
 
-class HierarchicalFilesystemCachePoolFlysystem3 extends AbstractCachePool implements HierarchicalPoolInterface
+class HierarchicalFilesystemCachePool extends AbstractCachePool implements HierarchicalPoolInterface
 {
     use HierarchicalCachePoolTrait;
 
-    public const CACHE_PATH = 'cache';
+    protected Filesystem $filesystem;
 
     /**
-     * @type Filesystem
+     * Absolute path to cache folder. Should not end with a slash.
      */
-    protected $filesystem;
+    protected string $folder;
 
-    public function __construct(Filesystem $filesystem)
-    {
+    protected ?int $filePermission;
+
+    protected int $directoryPermission;
+
+    public function __construct(
+        Filesystem $filesystem,
+        string $folder,
+        ?int $filePermission = null,
+        int $directoryPermission = 0755
+    ) {
         $this->filesystem = $filesystem;
-        $this->filesystem->createDirectory(self::CACHE_PATH);
+        $this->folder = rtrim($folder, '/\\');
+        $this->filePermission = $filePermission;
+        $this->directoryPermission = $directoryPermission;
+        $this->ensureFolderExists();
     }
 
     /**
@@ -41,8 +52,6 @@ class HierarchicalFilesystemCachePoolFlysystem3 extends AbstractCachePool implem
     }
 
     /**
-     * @param string $key
-     * @return string
      * @throws \InvalidArgumentException
      */
     protected function getFilePath(string $key): string
@@ -51,8 +60,13 @@ class HierarchicalFilesystemCachePoolFlysystem3 extends AbstractCachePool implem
             throw new \InvalidArgumentException(sprintf('Invalid key "%s". Valid keys must match [a-zA-Z0-9_\.! ].', $key));
         }
         $key = str_replace(HierarchicalPoolInterface::HIERARCHY_SEPARATOR, '/', $key);
+        foreach (explode('/', $key) as $segment) {
+            if ($segment === '.' || $segment === '..') {
+                throw new \InvalidArgumentException(sprintf('Invalid key "%s". Path traversal is not allowed.', $key));
+            }
+        }
 
-        return sprintf('%s/%s', rtrim(self::CACHE_PATH, '/\\'), ltrim($key, '/\\'));
+        return sprintf('%s/%s', $this->folder, ltrim($key, '/\\'));
     }
 
     /**
@@ -70,22 +84,18 @@ class HierarchicalFilesystemCachePoolFlysystem3 extends AbstractCachePool implem
     protected function storeItemInCache(PhpCacheItem $item, $ttl)
     {
         $file = $this->getFilePath($item->getKey());
-        if ($this->filesystem->has($file)) {
+        if ($this->filesystem->isFile($file)) {
             $this->filesystem->delete($file);
         }
 
-        $tags = $item->getTags();
-
-        $this->filesystem->write(
+        return $this->writeFile(
             $file,
             serialize([
                 $ttl === null ? null : time() + $ttl,
                 $item->get(),
-                $tags,
+                $item->getTags(),
             ])
         );
-
-        return true;
     }
 
     /**
@@ -93,13 +103,13 @@ class HierarchicalFilesystemCachePoolFlysystem3 extends AbstractCachePool implem
      */
     protected function fetchObjectFromCache($key)
     {
-        $file = $this->getFilePath($key);
-        if (!$this->filesystem->has($file)) {
+        $contents = $this->readFile($this->getFilePath($key));
+        if ($contents === null) {
             return [false, null, []];
         }
 
         /** @noinspection UnserializeExploitsInspection */
-        $data = unserialize($this->filesystem->read($file));
+        $data = unserialize($contents);
         if ($data[0] !== null && time() > $data[0]) {
             foreach ($data[2] as $tag) {
                 $this->removeListItem($this->getTagKey($tag), $key);
@@ -118,13 +128,12 @@ class HierarchicalFilesystemCachePoolFlysystem3 extends AbstractCachePool implem
     protected function getList($name)
     {
         $file = $this->getFilePath($name);
-
-        if (!$this->filesystem->has($file)) {
-            $this->filesystem->write($file, serialize([]));
+        if (!$this->filesystem->isFile($file)) {
+            $this->writeFile($file, serialize([]));
         }
 
         /** @noinspection UnserializeExploitsInspection */
-        return unserialize($this->filesystem->read($file));
+        return unserialize($this->readFile($file) ?? serialize([]));
     }
 
     /**
@@ -132,8 +141,7 @@ class HierarchicalFilesystemCachePoolFlysystem3 extends AbstractCachePool implem
      */
     protected function removeList($name)
     {
-        $file = $this->getFilePath($name);
-        $this->filesystem->delete($file);
+        $this->filesystem->delete($this->getFilePath($name));
     }
 
     /**
@@ -144,8 +152,7 @@ class HierarchicalFilesystemCachePoolFlysystem3 extends AbstractCachePool implem
         $list = $this->getList($name);
         $list[] = $key;
 
-        $this->filesystem->write($this->getFilePath($name), serialize($list));
-        return true;
+        return $this->writeFile($this->getFilePath($name), serialize($list));
     }
 
     /**
@@ -160,14 +167,13 @@ class HierarchicalFilesystemCachePoolFlysystem3 extends AbstractCachePool implem
             }
         }
 
-        $this->filesystem->write($this->getFilePath($name), serialize($list));
-        return true;
+        return $this->writeFile($this->getFilePath($name), serialize($list));
     }
 
     protected function forceClear(string $key): bool
     {
         $path = $this->getFilePath($key);
-        if ($this->filesystem->directoryExists($path)) {
+        if ($this->filesystem->isDirectory($path)) {
             $this->filesystem->deleteDirectory($path);
         } else {
             $this->filesystem->delete($path);
@@ -190,8 +196,8 @@ class HierarchicalFilesystemCachePoolFlysystem3 extends AbstractCachePool implem
      */
     protected function clearAllObjectsFromCache()
     {
-        $this->filesystem->deleteDirectory(self::CACHE_PATH);
-        $this->filesystem->createDirectory(self::CACHE_PATH);
+        $this->filesystem->deleteDirectory($this->folder);
+        $this->ensureFolderExists();
 
         return true;
     }
@@ -215,5 +221,35 @@ class HierarchicalFilesystemCachePoolFlysystem3 extends AbstractCachePool implem
         }
 
         return $this;
+    }
+
+    protected function ensureFolderExists(): void
+    {
+        $this->filesystem->ensureDirectoryExists($this->folder, $this->directoryPermission, true);
+    }
+
+    protected function readFile(string $path): ?string
+    {
+        if (!$this->filesystem->isFile($path)) {
+            return null;
+        }
+        try {
+            return $this->filesystem->get($path, true);
+        } catch (FileNotFoundException $e) {
+            return null;
+        }
+    }
+
+    protected function writeFile(string $path, string $data): bool
+    {
+        $this->filesystem->ensureDirectoryExists(dirname($path), $this->directoryPermission, true);
+        if ($this->filesystem->put($path, $data, true) === false) {
+            return false;
+        }
+        if ($this->filePermission !== null) {
+            $this->filesystem->chmod($path, $this->filePermission);
+        }
+
+        return true;
     }
 }

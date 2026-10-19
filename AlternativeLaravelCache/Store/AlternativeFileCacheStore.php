@@ -8,7 +8,7 @@ use AlternativeLaravelCache\Core\AlternativeCacheStore;
 use AlternativeLaravelCache\Vendors\Common\AbstractCachePool;
 use AlternativeLaravelCache\Vendors\FileSystem\FilesystemCachePool;
 use AlternativeLaravelCache\Vendors\TagInterop\TaggableCacheItemPoolInterface;
-use League\Flysystem\Filesystem;
+use Illuminate\Filesystem\Filesystem;
 
 class AlternativeFileCacheStore extends AlternativeCacheStore
 {
@@ -19,6 +19,13 @@ class AlternativeFileCacheStore extends AlternativeCacheStore
      * @var Filesystem
      */
     protected $db;
+
+    /**
+     * Permissions for created cache directories.
+     *
+     * @var int
+     */
+    protected $directoryPermission = 0755;
 
     /**
      * The file cache directory.
@@ -44,23 +51,26 @@ class AlternativeFileCacheStore extends AlternativeCacheStore
     /**
      * Create a new file cache store instance.
      *
-     * @param \League\Flysystem\Filesystem $db
+     * @param Filesystem $db
      * @param string $prefix
      * @param string $directory
      * @param int|null $filePermission
      * @param array|bool|null $serializableClasses
+     * @param int $directoryPermission
      */
     public function __construct(
         $db,
         $prefix,
         $directory,
         $filePermission = null,
-        $serializableClasses = true
+        $serializableClasses = true,
+        $directoryPermission = 0755
     ) {
         parent::__construct($db, $prefix);
         $this->directory = $directory ?? 'cache';
         $this->filePermission = $filePermission;
         $this->serializableClasses = $serializableClasses;
+        $this->directoryPermission = $directoryPermission;
     }
 
     /**
@@ -70,7 +80,22 @@ class AlternativeFileCacheStore extends AlternativeCacheStore
      */
     public function wrapConnection()
     {
-        return new FilesystemCachePool($this->getDb(), $this->getDirectory());
+        return new FilesystemCachePool(
+            $this->getDb(),
+            $this->getDirectory(),
+            $this->filePermission,
+            $this->directoryPermission
+        );
+    }
+
+    /**
+     * Get the Filesystem instance.
+     *
+     * @return Filesystem
+     */
+    public function getFilesystem()
+    {
+        return $this->getDb();
     }
 
     public function setPrefix(string $prefix): void

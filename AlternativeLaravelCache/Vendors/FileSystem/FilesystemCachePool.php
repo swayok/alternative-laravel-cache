@@ -14,65 +14,56 @@ namespace AlternativeLaravelCache\Vendors\FileSystem;
 use AlternativeLaravelCache\Vendors\Common\AbstractCachePool;
 use AlternativeLaravelCache\Vendors\Common\Exception\InvalidArgumentException;
 use AlternativeLaravelCache\Vendors\Common\PhpCacheItem;
-use League\Flysystem\Filesystem;
-use League\Flysystem\FilesystemException;
-use League\Flysystem\UnableToDeleteFile;
+use Illuminate\Contracts\Filesystem\FileNotFoundException;
+use Illuminate\Filesystem\Filesystem;
 
 /**
  * @author Tobias Nyholm <tobias.nyholm@gmail.com>
  */
 class FilesystemCachePool extends AbstractCachePool
 {
-    /**
-     * @type Filesystem
-     */
     private Filesystem $filesystem;
 
     /**
-     * The folder should not begin nor end with a slash. Example: path/to/cache.
-     *
-     * @type string
+     * Absolute path to cache folder. Should not end with a slash.
      */
     private string $folder;
 
-    /**
-     * @param Filesystem $filesystem
-     * @param string $folder
-     *
-     * @throws \League\Flysystem\FilesystemException
-     */
-    public function __construct(Filesystem $filesystem, string $folder = 'cache')
-    {
-        $this->folder = $folder;
+    private ?int $filePermission;
 
+    private int $directoryPermission;
+
+    public function __construct(
+        Filesystem $filesystem,
+        string $folder,
+        ?int $filePermission = null,
+        int $directoryPermission = 0755
+    ) {
         $this->filesystem = $filesystem;
-        $this->filesystem->createDirectory($this->folder, []);
+        $this->folder = rtrim($folder, '/\\');
+        $this->filePermission = $filePermission;
+        $this->directoryPermission = $directoryPermission;
+        $this->ensureFolderExists();
     }
 
-    /**
-     * @param string $folder
-     */
-    public function setFolder(string $folder)
+    public function setFolder(string $folder): void
     {
-        $this->folder = $folder;
+        $this->folder = rtrim($folder, '/\\');
     }
 
-    /**
-     * {@inheritdoc}
-     * @throws \League\Flysystem\FilesystemException
-     */
     protected function fetchObjectFromCache($key): array
     {
         $empty = [false, null, [], null];
         $file = $this->getFilePath($key);
 
-        try {
-            /** @noinspection UnserializeExploitsInspection */
-            $data = @unserialize($this->filesystem->read($file));
-            if ($data === false) {
-                return $empty;
-            }
-        } catch (FilesystemException $e) {
+        $contents = $this->readFile($file);
+        if ($contents === null) {
+            return $empty;
+        }
+
+        /** @noinspection UnserializeExploitsInspection */
+        $data = @unserialize($contents);
+        if ($data === false) {
             return $empty;
         }
 
@@ -90,29 +81,19 @@ class FilesystemCachePool extends AbstractCachePool
         return [true, $data[0], $data[1], $expirationTimestamp];
     }
 
-    /**
-     * {@inheritdoc}
-     * @throws \League\Flysystem\FilesystemException
-     */
     protected function clearAllObjectsFromCache(): bool
     {
         $this->filesystem->deleteDirectory($this->folder);
-        $this->filesystem->createDirectory($this->folder);
+        $this->ensureFolderExists();
 
         return true;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function clearOneObjectFromCache($key): bool
     {
         return $this->forceClear($key);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function storeItemInCache(PhpCacheItem $item, $ttl): bool
     {
         $data = serialize(
@@ -123,78 +104,45 @@ class FilesystemCachePool extends AbstractCachePool
             ]
         );
 
-        $file = $this->getFilePath($item->getKey());
-        try {
-            $this->filesystem->write($file, $data);
-
-            return true;
-        } catch (FilesystemException $e) {
-            return false;
-        }
+        return $this->writeFile($this->getFilePath($item->getKey()), $data);
     }
 
     /**
-     * @param string $key
-     *
-     * @return string
      * @throws InvalidArgumentException
-     *
      */
     private function getFilePath(string $key): string
     {
-        if (! preg_match('|^[a-zA-Z0-9_.! ]+$|', $key)) {
+        if (! preg_match('|^[a-zA-Z0-9_.! ]+$|', $key) || $key === '.' || $key === '..') {
             throw new InvalidArgumentException(sprintf('Invalid key "%s". Valid filenames must match [a-zA-Z0-9_\.! ].', $key));
         }
 
         return sprintf('%s/%s', $this->folder, $key);
     }
 
-    /**
-     * {@inheritdoc}
-     * @throws \League\Flysystem\FilesystemException
-     */
     protected function getList($name)
     {
         $file = $this->getFilePath($name);
-        if (!$this->filesystem->has($file)) {
-            $this->filesystem->write($file, serialize([]));
+        if (! $this->filesystem->isFile($file)) {
+            $this->writeFile($file, serialize([]));
         }
 
         /** @noinspection UnserializeExploitsInspection */
-        return unserialize($this->filesystem->read($file));
+        return unserialize($this->readFile($file) ?? serialize([]));
     }
 
-    /**
-     * {@inheritdoc}
-     * @throws \League\Flysystem\FilesystemException
-     */
     protected function removeList($name)
     {
-        $file = $this->getFilePath($name);
-        $this->filesystem->delete($file);
+        $this->filesystem->delete($this->getFilePath($name));
     }
 
-    /**
-     * {@inheritdoc}
-     * @throws \League\Flysystem\FilesystemException
-     */
     protected function appendListItem($name, $key): bool
     {
         $list = $this->getList($name);
         $list[] = $key;
 
-        try {
-            $this->filesystem->write($this->getFilePath($name), serialize($list));
-            return true;
-        } catch (FilesystemException $e) {
-            return false;
-        }
+        return $this->writeFile($this->getFilePath($name), serialize($list));
     }
 
-    /**
-     * {@inheritdoc}
-     * @throws \League\Flysystem\FilesystemException
-     */
     protected function removeListItem($name, $key): bool
     {
         $list = $this->getList($name);
@@ -204,27 +152,41 @@ class FilesystemCachePool extends AbstractCachePool
             }
         }
 
+        return $this->writeFile($this->getFilePath($name), serialize($list));
+    }
+
+    private function forceClear($key): bool
+    {
+        $path = $this->getFilePath($key);
+        $this->filesystem->delete($path);
+
+        return ! $this->filesystem->isFile($path);
+    }
+
+    private function ensureFolderExists(): void
+    {
+        $this->filesystem->ensureDirectoryExists($this->folder, $this->directoryPermission, true);
+    }
+
+    private function readFile(string $path): ?string
+    {
         try {
-            $this->filesystem->write($this->getFilePath($name), serialize($list));
-            return true;
-        } catch (FilesystemException $e) {
-            return false;
+            return $this->filesystem->get($path, true);
+        } catch (FileNotFoundException $e) {
+            return null;
         }
     }
 
-    /**
-     * @param $key
-     *
-     * @return bool
-     */
-    private function forceClear($key): bool
+    private function writeFile(string $path, string $data): bool
     {
-        try {
-            $this->filesystem->delete($this->getFilePath($key));
-
-            return true;
-        } catch (FilesystemException $e) {
+        $this->filesystem->ensureDirectoryExists(dirname($path), $this->directoryPermission, true);
+        if ($this->filesystem->put($path, $data, true) === false) {
             return false;
         }
+        if ($this->filePermission !== null) {
+            $this->filesystem->chmod($path, $this->filePermission);
+        }
+
+        return true;
     }
 }

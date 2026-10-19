@@ -23,9 +23,11 @@ class AlternativeFileCacheStoreWithLocks extends AlternativeFileCacheStore imple
         return new FileLock(
             new static(
                 $this->db,
+                $this->prefix,
                 $this->lockDirectory ?? $this->directory,
                 $this->filePermission,
-                $this->serializableClasses
+                $this->serializableClasses,
+                $this->directoryPermission
             ),
             "file-store-lock:{$name}",
             $seconds,
@@ -77,7 +79,7 @@ class AlternativeFileCacheStoreWithLocks extends AlternativeFileCacheStore imple
             throw new \RuntimeException('Flushing locks is only supported when the lock store is separate from the cache store.');
         }
 
-        if (! $this->db->directoryExists($this->lockDirectory)) {
+        if (! $this->db->isDirectory($this->lockDirectory)) {
             return false;
         }
 
@@ -89,7 +91,7 @@ class AlternativeFileCacheStoreWithLocks extends AlternativeFileCacheStore imple
         foreach ($subDirectories as $lockDirectory) {
             $this->db->deleteDirectory($lockDirectory->getPathname());
 
-            if ($this->db->directoryExists($lockDirectory)) {
+            if ($this->db->isDirectory($lockDirectory->getPathname())) {
                 return false;
             }
         }

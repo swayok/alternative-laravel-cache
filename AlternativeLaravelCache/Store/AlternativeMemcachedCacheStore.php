@@ -31,6 +31,16 @@ class AlternativeMemcachedCacheStore extends AlternativeCacheStore
         return new MemcachedCachePool($this->getDb());
     }
 
+    /**
+     * Get the underlying Memcached connection.
+     *
+     * @return \Memcached
+     */
+    public function getMemcached()
+    {
+        return $this->getDb();
+    }
+
     public function setPrefix(string $prefix): void
     {
         // not allowed chars: "{}()/\@"

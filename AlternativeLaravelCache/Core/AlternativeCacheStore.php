@@ -160,8 +160,24 @@ abstract class AlternativeCacheStore extends TaggableStore
     public function many(array $keys)
     {
         $this->_pullTags();
-        $items = $this->getWrappedConnection()->getItems(array_map([$this, 'itemKey'], $keys));
-        return array_map([$this, 'decodeItem'], $items);
+        // Results are keyed by original keys (like in Laravel's native stores), not by
+        // storage keys (prefixed, with not allowed chars replaced). Cache::flexible()
+        // and Repository::many() rely on this. Several original keys may map to
+        // the same storage key.
+        $originalKeys = [];
+        $result = [];
+        foreach ($keys as $key) {
+            $key = (string)$key;
+            $originalKeys[$this->itemKey($key)][] = $key;
+            $result[$key] = null;
+        }
+        foreach ($this->getWrappedConnection()->getItems(array_keys($originalKeys)) as $itemKey => $item) {
+            $value = $this->decodeItem($item);
+            foreach ($originalKeys[$itemKey] ?? [] as $key) {
+                $result[$key] = $value;
+            }
+        }
+        return $result;
     }
 
     /**

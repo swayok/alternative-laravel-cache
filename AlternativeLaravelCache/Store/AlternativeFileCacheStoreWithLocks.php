@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AlternativeLaravelCache\Store;
 
 use Illuminate\Cache\FileLock;
+use Illuminate\Cache\FileStore;
 use Illuminate\Contracts\Cache\LockProvider;
 use Symfony\Component\Finder\Finder;
 
@@ -13,6 +14,9 @@ class AlternativeFileCacheStoreWithLocks extends AlternativeFileCacheStore imple
     /**
      * Get a lock instance.
      *
+     * Locks are stored using Laravel's native FileStore because FileLock requires
+     * atomic add() and refreshIfOwned() methods that are based on file locking.
+     *
      * @param  string  $name
      * @param  int  $seconds
      * @param  string|null  $owner
@@ -20,16 +24,16 @@ class AlternativeFileCacheStoreWithLocks extends AlternativeFileCacheStore imple
      */
     public function lock($name, $seconds = 0, $owner = null)
     {
+        $directory = $this->lockDirectory ?? $this->directory;
+        if (!$this->db->isDirectory($directory)) {
+            $this->db->makeDirectory($directory, $this->directoryPermission, true, true);
+        }
+
         return new FileLock(
-            new static(
-                $this->db,
-                $this->prefix,
-                $this->lockDirectory ?? $this->directory,
-                $this->filePermission,
-                $this->serializableClasses,
-                $this->directoryPermission,
-                $this->serializableBaseClasses
-            ),
+            // File permissions are not passed: FileStore applies them to directories too,
+            // which breaks directories when permissions like 0644 are used.
+            // Lock owners are strings: unserialization of objects is not needed.
+            new FileStore($this->db, $directory, null, false),
             "file-store-lock:{$name}",
             $seconds,
             $owner
